@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace ProductManagementSystem.Application.Domain.Subscriptions.DTOs.Requests;
+namespace ProductManagementSystem.Application.Domain.Subscriptions.DTOs.Inputs;
 
 public record SubscriptionFilterDTO
 {

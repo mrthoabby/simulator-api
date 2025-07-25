@@ -2,8 +2,7 @@ namespace ProductManagementSystem.Application.Domain.Subscriptions.Enums;
 
 public enum EnumSubscriptionPeriod
 {
-    Monthly,
-    Yearly,
-    Every3Months,
-
+    Monthly = 30,
+    Yearly = 365,
+    Every3Months = 90,
 }

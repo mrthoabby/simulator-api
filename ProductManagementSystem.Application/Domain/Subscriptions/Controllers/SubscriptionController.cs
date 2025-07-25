@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using ProductManagementSystem.Application.Domain.Subscriptions.Services;
-using ProductManagementSystem.Application.Domain.Subscriptions.DTOs.Requests;
-using ProductManagementSystem.Application.Domain.Subscriptions.DTOs.Responses;
+using ProductManagementSystem.Application.Domain.Subscriptions.DTOs.Inputs;
+using ProductManagementSystem.Application.Domain.Subscriptions.DTOs.Outputs;
 using ProductManagementSystem.Application.Common.Domain.Type;
 using AutoMapper;
 using FluentValidation;

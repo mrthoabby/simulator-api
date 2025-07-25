@@ -9,6 +9,7 @@ using ProductManagementSystem.Application.Domain.UserPlans.Domain;
 using ProductManagementSystem.Application.Domain.UserPlans.Repository;
 using ProductManagementSystem.Application.Domain.Subscriptions.Repository;
 using ProductManagementSystem.Application.Domain.UserPlans.Models;
+using ProductManagementSystem.Application.Common.Helpers;
 
 namespace ProductManagementSystem.Application.Domain.Users.Services;
 
@@ -29,30 +30,34 @@ public class UserService : IUserService
 
     public async Task<UserDTO> CreateAsync(CreateUserDTO userDTO)
     {
-        var allUsers = await _userRepository.GetAllNoPaginationAsync();
-        if (allUsers.Any(x => x.Credential.Email == userDTO.Credentials.Email))
-        {
-            throw new InvalidOperationException("User already registered");
-        }
-
-        var subscription = await _subscriptionRepository.GetByIdAsync(userDTO.SubscriptionId);
-        if (subscription == null)
-        {
-            throw new NotFoundException("Subscription not found");
-        }
-
+        var subscription = await ValidationHelper.TryRunAllParallelWithResult(
+            async () =>
+            {
+                var sub = await _subscriptionRepository.GetByIdAsync(userDTO.SubscriptionId);
+                if (sub == null) throw new NotFoundException("Subscription not found");
+                return sub;
+            },
+            async () =>
+            {
+                var existingUser = await _userRepository.GetByEmailAsync(userDTO.Credentials.Email);
+                if (existingUser != null) throw new InvalidOperationException("User with this email already exists");
+            },
+            async () =>
+            {
+                var isMember = await _userPlanRepository.IsMemberAtAnyCompanyAsync(userDTO.Credentials.Email);
+                if (isMember) throw new InvalidOperationException("User with this email is already a member of a company");
+            }
+        );
 
         var credential = Credential.Create(userDTO.Credentials.Email, userDTO.Credentials.Password);
         var user = User.Create(userDTO.Name, credential);
-
-
         var company = Company.Create(userDTO.CompanyName ?? userDTO.Name + "-Company");
         var userPlan = UserPlan.Create(subscription, company, user.Id);
+
         var userPlanCreated = await _userPlanRepository.CreateAsync(userPlan);
-
         user.SetUserPlan(userPlan);
-
         var userCreated = await _userRepository.SaveAsync(user);
+
         return _mapper.Map<UserDTO>(userCreated);
     }
 

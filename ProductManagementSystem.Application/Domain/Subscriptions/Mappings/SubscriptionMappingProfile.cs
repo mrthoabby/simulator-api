@@ -1,6 +1,6 @@
 using AutoMapper;
-using ProductManagementSystem.Application.Domain.Subscriptions.DTOs.Responses;
-using ProductManagementSystem.Application.Domain.Subscriptions.DTOs.Requests;
+using ProductManagementSystem.Application.Domain.Subscriptions.DTOs.Outputs;
+using ProductManagementSystem.Application.Domain.Subscriptions.DTOs.Inputs;
 using ProductManagementSystem.Application.Domain.Subscriptions.Models;
 using ProductManagementSystem.Application.Common.Domain.Type;
 

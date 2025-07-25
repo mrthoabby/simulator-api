@@ -1,6 +1,6 @@
 using ProductManagementSystem.Application.Domain.Subscriptions.Models;
 using ProductManagementSystem.Application.Common.Domain.Type;
-using ProductManagementSystem.Application.Domain.Subscriptions.DTOs.Requests;
+using ProductManagementSystem.Application.Domain.Subscriptions.DTOs.Inputs;
 
 namespace ProductManagementSystem.Application.Domain.Subscriptions.Repository;
 

@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 using ProductManagementSystem.Application.Common.Domain.Enum;
 using ProductManagementSystem.Application.Domain.Subscriptions.Enums;
 
-namespace ProductManagementSystem.Application.Domain.Subscriptions.DTOs.Requests;
+namespace ProductManagementSystem.Application.Domain.Subscriptions.DTOs.Inputs;
 
 public record CreateSubscriptionDTO
 {
