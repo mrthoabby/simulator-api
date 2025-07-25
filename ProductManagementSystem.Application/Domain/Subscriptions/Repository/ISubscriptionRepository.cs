@@ -8,6 +8,7 @@ public interface ISubscriptionRepository
 {
     Task<Subscription> CreateAsync(Subscription subscription);
     Task<Subscription?> GetByIdAsync(string id);
+    Task<Subscription?> GetByNameAsync(string name);
     Task<PaginatedResult<Subscription>> GetAllAsync(SubscriptionFilterDTO filter);
     Task DeleteAsync(string id);
 }

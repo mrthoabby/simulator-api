@@ -26,6 +26,11 @@ public class MongoSubscriptionRepository : ISubscriptionRepository
         return await _collection.Find(s => s.Id == id).FirstOrDefaultAsync();
     }
 
+    public async Task<Subscription?> GetByNameAsync(string name)
+    {
+        return await _collection.Find(s => s.Name.ToLower() == name.ToLower()).FirstOrDefaultAsync();
+    }
+
     public async Task<PaginatedResult<Subscription>> GetAllAsync(SubscriptionFilterDTO filter)
     {
         // Construir filtros de búsqueda

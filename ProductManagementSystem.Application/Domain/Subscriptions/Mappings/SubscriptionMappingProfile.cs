@@ -2,7 +2,6 @@ using AutoMapper;
 using ProductManagementSystem.Application.Domain.Subscriptions.DTOs.Responses;
 using ProductManagementSystem.Application.Domain.Subscriptions.DTOs.Requests;
 using ProductManagementSystem.Application.Domain.Subscriptions.Models;
-using ProductManagementSystem.Application.Domain.Subscriptions.Enums;
 using ProductManagementSystem.Application.Common.Domain.Type;
 
 namespace ProductManagementSystem.Application.Domain.Subscriptions.Mappings;
