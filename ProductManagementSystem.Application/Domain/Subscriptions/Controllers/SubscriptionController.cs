@@ -103,7 +103,7 @@ public class SubscriptionController : ControllerBase
             }
 
             await _subscriptionService.DeleteAsync(id);
-            return NoContent();
+            return Ok(new { message = "Subscription deleted successfully" });
         }
         catch (ArgumentException ex)
         {
