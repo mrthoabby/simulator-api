@@ -314,7 +314,14 @@ public class SubscriptionControllerTests
         var subscriptionId = "123e4567-e89b-12d3-a456-426614174000";
         var usersWithSubscription = new List<UserDTO>
         {
-            new UserDTO { Id = "user1", SubscriptionId = subscriptionId, Email = "test@example.com", Name = "Test User", CompanyId = "company1" }
+            new UserDTO {
+                Id = "user1",
+                SubscriptionId = subscriptionId,
+                Email = "test@example.com",
+                Name = "Test User",
+                CompanyId = "company1",
+                UserPlanId = "userplan1" // ✅ Agregar UserPlanId requerido
+            }
         };
 
         _mockUserService.Setup(u => u.GetAllNoPaginationAsync())
