@@ -17,8 +17,9 @@ project.lock.json
 project.fragment.lock.json
 
 # Configuration files with sensitive data
+appsettings.json
 appsettings.local.json
-appsettings.*.local.json
+appsettings.*.json
 
 # Logs
 logs/
