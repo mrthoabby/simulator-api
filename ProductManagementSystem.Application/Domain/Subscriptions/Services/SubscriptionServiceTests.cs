@@ -9,6 +9,9 @@ using ProductManagementSystem.Application.Domain.Subscriptions.Models;
 using ProductManagementSystem.Application.Domain.Subscriptions.Enums;
 using ProductManagementSystem.Application.Common.Domain.Enum;
 using ProductManagementSystem.Application.Common.Domain.Type;
+using ProductManagementSystem.Application.Domain.Users.Services;
+using ProductManagementSystem.Application.Domain.Users.DTOs.Outputs;
+using Microsoft.Extensions.Logging;
 
 namespace ProductManagementSystem.Application.Domain.Subscriptions.Services;
 
@@ -16,13 +19,17 @@ public class SubscriptionServiceTests
 {
     private readonly Mock<ISubscriptionRepository> _mockRepository;
     private readonly Mock<IMapper> _mockMapper;
+    private readonly Mock<IUserService> _mockUserService;
+    private readonly Mock<ILogger<SubscriptionService>> _mockLogger;
     private readonly SubscriptionService _service;
 
     public SubscriptionServiceTests()
     {
         _mockRepository = new Mock<ISubscriptionRepository>();
         _mockMapper = new Mock<IMapper>();
-        _service = new SubscriptionService(_mockRepository.Object, _mockMapper.Object);
+        _mockUserService = new Mock<IUserService>();
+        _mockLogger = new Mock<ILogger<SubscriptionService>>();
+        _service = new SubscriptionService(_mockRepository.Object, _mockMapper.Object, _mockUserService.Object, _mockLogger.Object);
     }
 
     #region CreateAsync Tests
@@ -244,7 +251,7 @@ public class SubscriptionServiceTests
         result.HasPreviousPage.Should().BeFalse();
 
         _mockRepository.Verify(r => r.GetAllAsync(filter), Times.Once);
-        _mockMapper.Verify(m => m.Map<List<SubscriptionDTO>>(subscriptions), Times.Once);
+        _mockMapper.Verify(m => m.Map<List<SubscriptionDTO>>(It.IsAny<List<Subscription>>()), Times.Once);
     }
 
     [Fact]
@@ -279,6 +286,7 @@ public class SubscriptionServiceTests
         result.TotalCount.Should().Be(0);
 
         _mockRepository.Verify(r => r.GetAllAsync(filter), Times.Once);
+        _mockMapper.Verify(m => m.Map<List<SubscriptionDTO>>(paginatedResult.Items), Times.Once);
     }
 
     #endregion
@@ -295,6 +303,9 @@ public class SubscriptionServiceTests
         _mockRepository.Setup(r => r.GetByIdAsync(subscriptionId))
             .ReturnsAsync(subscription);
 
+        _mockUserService.Setup(u => u.GetAllNoPaginationAsync(It.IsAny<ProductManagementSystem.Application.Domain.Users.DTOs.Inputs.UserFilterDTO>()))
+            .ReturnsAsync(new List<UserDTO>());
+
         _mockRepository.Setup(r => r.DeleteAsync(subscriptionId))
             .Returns(Task.CompletedTask);
 
@@ -303,6 +314,7 @@ public class SubscriptionServiceTests
 
         // Assert
         _mockRepository.Verify(r => r.GetByIdAsync(subscriptionId), Times.Once);
+        _mockUserService.Verify(u => u.GetAllNoPaginationAsync(It.IsAny<ProductManagementSystem.Application.Domain.Users.DTOs.Inputs.UserFilterDTO>()), Times.Once);
         _mockRepository.Verify(r => r.DeleteAsync(subscriptionId), Times.Once);
     }
 

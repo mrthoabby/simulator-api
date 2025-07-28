@@ -3,10 +3,6 @@ using ProductManagementSystem.Application.Domain.Subscriptions.Services;
 using ProductManagementSystem.Application.Domain.Subscriptions.DTOs.Inputs;
 using ProductManagementSystem.Application.Domain.Subscriptions.DTOs.Outputs;
 using ProductManagementSystem.Application.Common.Domain.Type;
-using AutoMapper;
-using FluentValidation;
-using ProductManagementSystem.Application.Domain.Users.Services;
-using ProductManagementSystem.Application.Domain.Users.DTOs.Inputs;
 using ProductManagementSystem.Application.Common.Domain.Errors;
 
 namespace ProductManagementSystem.Application.Domain.Subscriptions.Controllers;
@@ -16,16 +12,12 @@ namespace ProductManagementSystem.Application.Domain.Subscriptions.Controllers;
 public class SubscriptionController : ControllerBase
 {
     private readonly ISubscriptionService _subscriptionService;
-    private readonly IMapper _mapper;
     private readonly ILogger<SubscriptionController> _logger;
-    private readonly IUserService _userService;
 
-    public SubscriptionController(ISubscriptionService subscriptionService, IMapper mapper, ILogger<SubscriptionController> logger, IUserService userService)
+    public SubscriptionController(ISubscriptionService subscriptionService, ILogger<SubscriptionController> logger)
     {
         _subscriptionService = subscriptionService;
-        _mapper = mapper;
         _logger = logger;
-        _userService = userService;
     }
 
     [HttpPost]

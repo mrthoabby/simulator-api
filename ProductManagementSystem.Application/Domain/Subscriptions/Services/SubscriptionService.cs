@@ -4,6 +4,8 @@ using ProductManagementSystem.Application.Common.Domain.Type;
 using ProductManagementSystem.Application.Domain.Subscriptions.DTOs.Inputs;
 using ProductManagementSystem.Application.Domain.Subscriptions.DTOs.Outputs;
 using ProductManagementSystem.Application.Domain.Subscriptions.Models;
+using ProductManagementSystem.Application.Domain.Users.Services;
+using ProductManagementSystem.Application.Domain.Users.DTOs.Inputs;
 using AutoMapper;
 
 namespace ProductManagementSystem.Application.Domain.Subscriptions.Services;
@@ -12,11 +14,15 @@ public class SubscriptionService : ISubscriptionService
 {
     private readonly ISubscriptionRepository _repository;
     private readonly IMapper _mapper;
+    private readonly IUserService _userService;
+    private readonly ILogger<SubscriptionService> _logger;
 
-    public SubscriptionService(ISubscriptionRepository repository, IMapper mapper)
+    public SubscriptionService(ISubscriptionRepository repository, IMapper mapper, IUserService userService, ILogger<SubscriptionService> logger)
     {
         _repository = repository;
         _mapper = mapper;
+        _userService = userService;
+        _logger = logger;
     }
 
     public async Task<SubscriptionDTO> CreateAsync(CreateSubscriptionDTO subscriptionDto)
@@ -24,6 +30,7 @@ public class SubscriptionService : ISubscriptionService
         var existingSubscription = await _repository.GetByNameAsync(subscriptionDto.Name);
         if (existingSubscription != null)
         {
+            _logger.LogWarning("Subscription creation failed: Subscription with name {SubscriptionName} already exists", subscriptionDto.Name);
             throw new InvalidOperationException("A subscription with this name already exists");
         }
 
@@ -90,6 +97,18 @@ public class SubscriptionService : ISubscriptionService
         if (subscription == null)
         {
             throw new ArgumentException("Subscription not found");
+        }
+        var activeUsersFilter = new UserFilterDTO
+        {
+            SubscriptionId = id,
+            PageSize = 1
+        };
+        var activeUsers = await _userService.GetAllNoPaginationAsync(activeUsersFilter);
+        if (activeUsers.Any())
+        {
+            _logger.LogWarning("Subscription deletion failed: Subscription {SubscriptionName} (ID: {SubscriptionId}) has {UserCount} active users",
+                subscription.Name, id, activeUsers.Count);
+            throw new InvalidOperationException($"Cannot delete subscription '{subscription.Name}' because it has {activeUsers.Count} active users associated with it");
         }
 
         await _repository.DeleteAsync(id);

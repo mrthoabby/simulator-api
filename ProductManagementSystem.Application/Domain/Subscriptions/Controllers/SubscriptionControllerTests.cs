@@ -20,23 +20,17 @@ namespace ProductManagementSystem.Application.Domain.Subscriptions.Controllers;
 public class SubscriptionControllerTests
 {
     private readonly Mock<ISubscriptionService> _mockSubscriptionService;
-    private readonly Mock<IUserService> _mockUserService;
-    private readonly Mock<IMapper> _mockMapper;
     private readonly Mock<ILogger<SubscriptionController>> _mockLogger;
     private readonly SubscriptionController _controller;
 
     public SubscriptionControllerTests()
     {
         _mockSubscriptionService = new Mock<ISubscriptionService>();
-        _mockUserService = new Mock<IUserService>();
-        _mockMapper = new Mock<IMapper>();
         _mockLogger = new Mock<ILogger<SubscriptionController>>();
 
         _controller = new SubscriptionController(
             _mockSubscriptionService.Object,
-            _mockMapper.Object,
-            _mockLogger.Object,
-            _mockUserService.Object
+            _mockLogger.Object
         );
     }
 
@@ -315,11 +309,7 @@ public class SubscriptionControllerTests
     {
         // Arrange
         var subscriptionId = "non-existing-id";
-        var emptyUserList = new List<UserDTO>();
         var argumentException = new ArgumentException("Subscription not found");
-
-        _mockUserService.Setup(u => u.GetAllNoPaginationAsync(It.IsAny<UserFilterDTO>()))
-            .ReturnsAsync(emptyUserList);
 
         _mockSubscriptionService.Setup(s => s.DeleteAsync(subscriptionId))
             .ThrowsAsync(argumentException);
@@ -337,11 +327,7 @@ public class SubscriptionControllerTests
     {
         // Arrange
         var subscriptionId = "123e4567-e89b-12d3-a456-426614174000";
-        var emptyUserList = new List<UserDTO>();
         var exception = new Exception("Unexpected error");
-
-        _mockUserService.Setup(u => u.GetAllNoPaginationAsync(It.IsAny<UserFilterDTO>()))
-            .ReturnsAsync(emptyUserList);
 
         _mockSubscriptionService.Setup(s => s.DeleteAsync(subscriptionId))
             .ThrowsAsync(exception);

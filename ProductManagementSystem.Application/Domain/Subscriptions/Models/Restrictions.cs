@@ -4,15 +4,15 @@ namespace ProductManagementSystem.Application.Domain.Subscriptions.Models;
 
 public class Restrictions
 {
-    public int MaxProducts { get; set; }
-    public int MaxUsers { get; set; }
-    public int MaxCompetitors { get; set; }
-    public int MaxCustomDeductions { get; set; }
-    public int MaxSimulations { get; set; }
+    public int MaxProducts { get; init; }
+    public int MaxUsers { get; init; }
+    public int MaxCompetitors { get; init; }
+    public int MaxCustomDeductions { get; init; }
+    public int MaxSimulations { get; init; }
 
-    public bool IsPDFExportSupported { get; set; }
-    public bool IsSimulationComparisonSupported { get; set; }
-    public bool IsExcelExportSupported { get; set; }
+    public bool IsPDFExportSupported { get; init; }
+    public bool IsSimulationComparisonSupported { get; init; }
+    public bool IsExcelExportSupported { get; init; }
 
     private Restrictions()
     {
@@ -28,6 +28,14 @@ public class Restrictions
         IsPDFExportSupported = isPDFExportSupported;
         IsSimulationComparisonSupported = isSimulationComparisonSupported;
         IsExcelExportSupported = isExcelExportSupported;
+
+        var validator = new RestrictionsValidator();
+        var validationResult = validator.Validate(this);
+        if (!validationResult.IsValid)
+        {
+            var errors = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage));
+            throw new ValidationException($"Restrictions validation failed: {errors}");
+        }
     }
 
     public static Restrictions Create(int maxProducts, int maxUsers, int maxCompetitors, int maxCustomDeductions, int maxSimulations, bool isPDFExportSupported, bool isSimulationComparisonSupported, bool isExcelExportSupported)

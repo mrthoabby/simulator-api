@@ -1,6 +1,7 @@
 using ProductManagementSystem.Application.Common.Domain.Type;
 using ProductManagementSystem.Application.Domain.Subscriptions.Enums;
 using FluentValidation;
+using System.Linq;
 
 namespace ProductManagementSystem.Application.Domain.Subscriptions.Models;
 
@@ -27,6 +28,15 @@ public class Subscription
         IsActive = true;
         CreatedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
+
+        // Validar la entidad usando FluentValidation
+        var validator = new SubscriptionValidator();
+        var validationResult = validator.Validate(this);
+        if (!validationResult.IsValid)
+        {
+            var errors = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage));
+            throw new ValidationException($"Subscription validation failed: {errors}");
+        }
     }
 
     public static Subscription Create(string name, string description, Price price, EnumSubscriptionPeriod period, Restrictions restrictions)
