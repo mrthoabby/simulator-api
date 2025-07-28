@@ -6,6 +6,8 @@ using ProductManagementSystem.Application.Common.Domain.Type;
 using AutoMapper;
 using FluentValidation;
 using ProductManagementSystem.Application.Domain.Users.Services;
+using ProductManagementSystem.Application.Domain.Users.DTOs.Inputs;
+using ProductManagementSystem.Application.Common.Domain.Errors;
 
 namespace ProductManagementSystem.Application.Domain.Subscriptions.Controllers;
 
@@ -27,93 +29,54 @@ public class SubscriptionController : ControllerBase
     }
 
     [HttpPost]
+    [ProducesResponseType(typeof(SubscriptionDTO), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<SubscriptionDTO>> Create([FromBody] CreateSubscriptionDTO request)
     {
-        try
-        {
-            var subscription = await _subscriptionService.CreateAsync(request);
-            return CreatedAtAction(
-                actionName: nameof(GetById),
-                routeValues: new { id = subscription.Id },
-                value: subscription
-            );
-        }
-        catch (ValidationException ex)
-        {
-            _logger.LogWarning(ex, "Validation error while creating subscription: {Message}", ex.Message);
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            _logger.LogWarning(ex, "Business rule violation: {Message}", ex.Message);
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Unexpected error while creating subscription");
-            return StatusCode(StatusCodes.Status500InternalServerError, new { error = "An unexpected error occurred while processing your request" });
-        }
+
+        var subscription = await _subscriptionService.CreateAsync(request);
+        return CreatedAtAction(
+            actionName: nameof(GetById),
+            routeValues: new { id = subscription.Id },
+            value: subscription
+        );
+
     }
 
     [HttpGet("{id}")]
+    [ProducesResponseType(typeof(SubscriptionDTO), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<SubscriptionDTO>> GetById(string id)
     {
-        try
+        var subscription = await _subscriptionService.GetByIdAsync(id);
+        if (subscription == null)
         {
-            var subscription = await _subscriptionService.GetByIdAsync(id);
-            if (subscription == null)
-            {
-                return NotFound($"Subscription with ID {id} not found");
-            }
-            return Ok(subscription);
+            return NotFound($"Subscription with ID {id} not found");
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving subscription with ID {Id}", id);
-            return StatusCode(StatusCodes.Status500InternalServerError, new { error = "An unexpected error occurred while processing your request" });
-        }
+        return Ok(subscription);
     }
 
     [HttpGet]
-    public async Task<ActionResult<PaginatedResult<SubscriptionDTO>>> GetAll([FromQuery] SubscriptionFilterDTO? filter)
+    [ProducesResponseType(typeof(PaginatedResult<SubscriptionDTO>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<PaginatedResult<SubscriptionDTO>>> GetAll([FromQuery] SubscriptionFilterDTO filter)
     {
-        try
-        {
-            filter ??= new SubscriptionFilterDTO { Page = 1, PageSize = 10 };
-
-            var paginatedSubscriptions = await _subscriptionService.GetAllAsync(filter);
-            return Ok(paginatedSubscriptions);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error retrieving subscriptions list");
-            return StatusCode(StatusCodes.Status500InternalServerError, new { error = "An unexpected error occurred while processing your request" });
-        }
+        var paginatedSubscriptions = await _subscriptionService.GetAllAsync(filter);
+        return Ok(paginatedSubscriptions);
     }
 
     [HttpDelete("{id}")]
+    [ProducesResponseType(typeof(void), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
     public async Task<ActionResult> Delete(string id)
     {
-        try
-        {
-            var allUsers = await _userService.GetAllNoPaginationAsync();
-            if (allUsers.Any(x => x.SubscriptionId == id))
-            {
-                return BadRequest("Cannot delete subscription with active users");
-            }
 
-            await _subscriptionService.DeleteAsync(id);
-            return Ok(new { message = "Subscription deleted successfully" });
-        }
-        catch (ArgumentException ex)
-        {
-            _logger.LogWarning(ex, "Subscription with ID {Id} not found for deletion", id);
-            return NotFound(new { error = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error deleting subscription with ID {Id}", id);
-            return StatusCode(StatusCodes.Status500InternalServerError, new { error = "An unexpected error occurred while processing your request" });
-        }
+        await _subscriptionService.DeleteAsync(id);
+        return Ok(new { message = "Subscription deleted successfully" });
+
     }
 }

@@ -12,6 +12,8 @@ using ProductManagementSystem.Application.Domain.Users.DTOs.Outputs;
 using ProductManagementSystem.Application.Common.Domain.Type;
 using ProductManagementSystem.Application.Common.Domain.Enum;
 using ProductManagementSystem.Application.Domain.Subscriptions.Enums;
+using ProductManagementSystem.Application.Domain.Users.Models;
+using ProductManagementSystem.Application.Domain.Users.DTOs.Inputs;
 
 namespace ProductManagementSystem.Application.Domain.Subscriptions.Controllers;
 
@@ -63,7 +65,7 @@ public class SubscriptionControllerTests
     }
 
     [Fact]
-    public async Task Create_WithValidationError_ShouldReturnBadRequest()
+    public async Task Create_WithValidationError_ShouldThrowValidationException()
     {
         // Arrange
         var createDto = CreateValidCreateSubscriptionDTO();
@@ -72,19 +74,16 @@ public class SubscriptionControllerTests
         _mockSubscriptionService.Setup(s => s.CreateAsync(createDto))
             .ThrowsAsync(validationException);
 
-        // Act
-        var result = await _controller.Create(createDto);
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<ValidationException>(
+            () => _controller.Create(createDto));
 
-        // Assert
-        var badRequestResult = result.Result.Should().BeOfType<BadRequestObjectResult>().Subject;
-        var errorResponse = badRequestResult.Value.Should().BeAssignableTo<object>().Subject;
-        errorResponse.ToString().Should().Contain("Validation failed");
-
+        exception.Message.Should().Be("Validation failed");
         _mockSubscriptionService.Verify(s => s.CreateAsync(createDto), Times.Once);
     }
 
     [Fact]
-    public async Task Create_WithBusinessRuleViolation_ShouldReturnBadRequest()
+    public async Task Create_WithBusinessRuleViolation_ShouldThrowInvalidOperationException()
     {
         // Arrange
         var createDto = CreateValidCreateSubscriptionDTO();
@@ -93,19 +92,16 @@ public class SubscriptionControllerTests
         _mockSubscriptionService.Setup(s => s.CreateAsync(createDto))
             .ThrowsAsync(businessException);
 
-        // Act
-        var result = await _controller.Create(createDto);
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => _controller.Create(createDto));
 
-        // Assert
-        var badRequestResult = result.Result.Should().BeOfType<BadRequestObjectResult>().Subject;
-        var errorResponse = badRequestResult.Value.Should().BeAssignableTo<object>().Subject;
-        errorResponse.ToString().Should().Contain("A subscription with this name already exists");
-
+        exception.Message.Should().Be("A subscription with this name already exists");
         _mockSubscriptionService.Verify(s => s.CreateAsync(createDto), Times.Once);
     }
 
     [Fact]
-    public async Task Create_WithUnexpectedError_ShouldReturnInternalServerError()
+    public async Task Create_WithUnexpectedError_ShouldThrowException()
     {
         // Arrange
         var createDto = CreateValidCreateSubscriptionDTO();
@@ -114,13 +110,11 @@ public class SubscriptionControllerTests
         _mockSubscriptionService.Setup(s => s.CreateAsync(createDto))
             .ThrowsAsync(exception);
 
-        // Act
-        var result = await _controller.Create(createDto);
+        // Act & Assert
+        var thrownException = await Assert.ThrowsAsync<Exception>(
+            () => _controller.Create(createDto));
 
-        // Assert
-        var statusResult = result.Result.Should().BeOfType<ObjectResult>().Subject;
-        statusResult.StatusCode.Should().Be(500);
-
+        thrownException.Message.Should().Be("Unexpected error");
         _mockSubscriptionService.Verify(s => s.CreateAsync(createDto), Times.Once);
     }
 
@@ -168,7 +162,7 @@ public class SubscriptionControllerTests
     }
 
     [Fact]
-    public async Task GetById_WithUnexpectedError_ShouldReturnInternalServerError()
+    public async Task GetById_WithUnexpectedError_ShouldThrowException()
     {
         // Arrange
         var subscriptionId = "123e4567-e89b-12d3-a456-426614174000";
@@ -177,13 +171,11 @@ public class SubscriptionControllerTests
         _mockSubscriptionService.Setup(s => s.GetByIdAsync(subscriptionId))
             .ThrowsAsync(exception);
 
-        // Act
-        var result = await _controller.GetById(subscriptionId);
+        // Act & Assert
+        var thrownException = await Assert.ThrowsAsync<Exception>(
+            () => _controller.GetById(subscriptionId));
 
-        // Assert
-        var statusResult = result.Result.Should().BeOfType<ObjectResult>().Subject;
-        statusResult.StatusCode.Should().Be(500);
-
+        thrownException.Message.Should().Be("Unexpected error");
         _mockSubscriptionService.Verify(s => s.GetByIdAsync(subscriptionId), Times.Once);
     }
 
@@ -248,7 +240,7 @@ public class SubscriptionControllerTests
             .ReturnsAsync(paginatedResult);
 
         // Act
-        var result = await _controller.GetAll(null);
+        var result = await _controller.GetAll(expectedFilter);
 
         // Assert
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
@@ -259,7 +251,7 @@ public class SubscriptionControllerTests
     }
 
     [Fact]
-    public async Task GetAll_WithUnexpectedError_ShouldReturnInternalServerError()
+    public async Task GetAll_WithUnexpectedError_ShouldThrowException()
     {
         // Arrange
         var filter = new SubscriptionFilterDTO { Page = 1, PageSize = 10 };
@@ -268,13 +260,11 @@ public class SubscriptionControllerTests
         _mockSubscriptionService.Setup(s => s.GetAllAsync(filter))
             .ThrowsAsync(exception);
 
-        // Act
-        var result = await _controller.GetAll(filter);
+        // Act & Assert
+        var thrownException = await Assert.ThrowsAsync<Exception>(
+            () => _controller.GetAll(filter));
 
-        // Assert
-        var statusResult = result.Result.Should().BeOfType<ObjectResult>().Subject;
-        statusResult.StatusCode.Should().Be(500);
-
+        thrownException.Message.Should().Be("Unexpected error");
         _mockSubscriptionService.Verify(s => s.GetAllAsync(filter), Times.Once);
     }
 
@@ -283,14 +273,10 @@ public class SubscriptionControllerTests
     #region Delete Tests
 
     [Fact]
-    public async Task Delete_WithValidIdAndNoActiveUsers_ShouldReturnOkResult()
+    public async Task Delete_WithValidId_ShouldReturnOkResult()
     {
         // Arrange
         var subscriptionId = "123e4567-e89b-12d3-a456-426614174000";
-        var emptyUserList = new List<UserDTO>();
-
-        _mockUserService.Setup(u => u.GetAllNoPaginationAsync())
-            .ReturnsAsync(emptyUserList);
 
         _mockSubscriptionService.Setup(s => s.DeleteAsync(subscriptionId))
             .Returns(Task.CompletedTask);
@@ -303,89 +289,68 @@ public class SubscriptionControllerTests
         var response = okResult.Value.Should().BeAssignableTo<object>().Subject;
         response.ToString().Should().Contain("Subscription deleted successfully");
 
-        _mockUserService.Verify(u => u.GetAllNoPaginationAsync(), Times.Once);
         _mockSubscriptionService.Verify(s => s.DeleteAsync(subscriptionId), Times.Once);
     }
 
     [Fact]
-    public async Task Delete_WithActiveUsers_ShouldReturnBadRequest()
+    public async Task Delete_WithBusinessRuleViolation_ShouldThrowException()
     {
         // Arrange
         var subscriptionId = "123e4567-e89b-12d3-a456-426614174000";
-        var usersWithSubscription = new List<UserDTO>
-        {
-            new UserDTO {
-                Id = "user1",
-                SubscriptionId = subscriptionId,
-                Email = "test@example.com",
-                Name = "Test User",
-                CompanyId = "company1",
-                UserPlanId = "userplan1" // ✅ Agregar UserPlanId requerido
-            }
-        };
+        var businessException = new InvalidOperationException("Cannot delete subscription with active users");
 
-        _mockUserService.Setup(u => u.GetAllNoPaginationAsync())
-            .ReturnsAsync(usersWithSubscription);
+        _mockSubscriptionService.Setup(s => s.DeleteAsync(subscriptionId))
+            .ThrowsAsync(businessException);
 
-        // Act
-        var result = await _controller.Delete(subscriptionId);
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => _controller.Delete(subscriptionId));
 
-        // Assert
-        var badRequestResult = result.Should().BeOfType<BadRequestObjectResult>().Subject;
-        badRequestResult.Value.Should().Be("Cannot delete subscription with active users");
-
-        _mockUserService.Verify(u => u.GetAllNoPaginationAsync(), Times.Once);
-        _mockSubscriptionService.Verify(s => s.DeleteAsync(It.IsAny<string>()), Times.Never);
+        exception.Message.Should().Be("Cannot delete subscription with active users");
+        _mockSubscriptionService.Verify(s => s.DeleteAsync(subscriptionId), Times.Once);
     }
 
     [Fact]
-    public async Task Delete_WithNonExistingId_ShouldReturnNotFound()
+    public async Task Delete_WithNonExistingId_ShouldThrowArgumentException()
     {
         // Arrange
         var subscriptionId = "non-existing-id";
         var emptyUserList = new List<UserDTO>();
         var argumentException = new ArgumentException("Subscription not found");
 
-        _mockUserService.Setup(u => u.GetAllNoPaginationAsync())
+        _mockUserService.Setup(u => u.GetAllNoPaginationAsync(It.IsAny<UserFilterDTO>()))
             .ReturnsAsync(emptyUserList);
 
         _mockSubscriptionService.Setup(s => s.DeleteAsync(subscriptionId))
             .ThrowsAsync(argumentException);
 
-        // Act
-        var result = await _controller.Delete(subscriptionId);
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => _controller.Delete(subscriptionId));
 
-        // Assert
-        var notFoundResult = result.Should().BeOfType<NotFoundObjectResult>().Subject;
-        var errorResponse = notFoundResult.Value.Should().BeAssignableTo<object>().Subject;
-        errorResponse.ToString().Should().Contain("Subscription not found");
-
-        _mockUserService.Verify(u => u.GetAllNoPaginationAsync(), Times.Once);
+        exception.Message.Should().Be("Subscription not found");
         _mockSubscriptionService.Verify(s => s.DeleteAsync(subscriptionId), Times.Once);
     }
 
     [Fact]
-    public async Task Delete_WithUnexpectedError_ShouldReturnInternalServerError()
+    public async Task Delete_WithUnexpectedError_ShouldThrowException()
     {
         // Arrange
         var subscriptionId = "123e4567-e89b-12d3-a456-426614174000";
         var emptyUserList = new List<UserDTO>();
         var exception = new Exception("Unexpected error");
 
-        _mockUserService.Setup(u => u.GetAllNoPaginationAsync())
+        _mockUserService.Setup(u => u.GetAllNoPaginationAsync(It.IsAny<UserFilterDTO>()))
             .ReturnsAsync(emptyUserList);
 
         _mockSubscriptionService.Setup(s => s.DeleteAsync(subscriptionId))
             .ThrowsAsync(exception);
 
-        // Act
-        var result = await _controller.Delete(subscriptionId);
+        // Act & Assert
+        var thrownException = await Assert.ThrowsAsync<Exception>(
+            () => _controller.Delete(subscriptionId));
 
-        // Assert
-        var statusResult = result.Should().BeOfType<ObjectResult>().Subject;
-        statusResult.StatusCode.Should().Be(500);
-
-        _mockUserService.Verify(u => u.GetAllNoPaginationAsync(), Times.Once);
+        thrownException.Message.Should().Be("Unexpected error");
         _mockSubscriptionService.Verify(s => s.DeleteAsync(subscriptionId), Times.Once);
     }
 
