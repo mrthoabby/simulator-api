@@ -1,11 +1,7 @@
 using Xunit;
 using Moq;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using AutoMapper;
-using ProductManagementSystem.Application.Domain.Auth.Services;
 using ProductManagementSystem.Application.Domain.Auth.DTOs.Inputs;
-using ProductManagementSystem.Application.Domain.Auth.DTOs.Outputs;
 using ProductManagementSystem.Application.Domain.Auth.Models;
 using ProductManagementSystem.Application.Domain.Auth.Repository;
 using ProductManagementSystem.Application.Domain.Auth.Enum;
@@ -16,13 +12,10 @@ using ProductManagementSystem.Application.Domain.UserPlans.Repository;
 using ProductManagementSystem.Application.Domain.UserPlans.Models;
 using ProductManagementSystem.Application.Domain.UserPlans.Domain;
 using ProductManagementSystem.Application.Domain.Subscriptions.Models;
-using ProductManagementSystem.Application.Domain.Subscriptions.Enums;
 using ProductManagementSystem.Application.Common;
 using ProductManagementSystem.Application.Domain.Users.Services;
 using ProductManagementSystem.Application.Common.Domain.Errors;
-using Microsoft.AspNetCore.Http;
-using FluentValidation;
-using System.Security.Claims;
+using ProductManagementSystem.Application.Domain.Shared.Type.Prices;
 
 namespace ProductManagementSystem.Application.Domain.Auth.Services;
 
@@ -324,7 +317,7 @@ public class AuthServiceTests
 
         var userId = "test-user-id";
         var revokedToken = AuthToken.Create(userId, refreshTokenDto.RefreshToken, TokenType.Refresh, DateTime.UtcNow.AddDays(1));
-        
+
         // Revoke the token to make it invalid
         revokedToken.Revoke("Test revocation");
 
@@ -435,9 +428,8 @@ public class AuthServiceTests
             .EnableExcelExport()
             .Build();
 
-        var price = new ProductManagementSystem.Application.Common.Domain.Type.Price(29.99m, 
-            ProductManagementSystem.Application.Common.Domain.Enum.EnumCurrency.USD);
-        
+        var price = new Price(29.99m, EnumCurrency.USD);
+
         var subscription = Subscription.Create(
             "Test Plan",
             "Test subscription with all features",
@@ -472,4 +464,4 @@ public class AuthServiceTests
     }
 
     #endregion
-} 
+}
