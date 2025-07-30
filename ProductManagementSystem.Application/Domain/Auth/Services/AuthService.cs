@@ -246,6 +246,9 @@ public class AuthService : IAuthService
 
     public async Task RevokeUserTokensAsync(string userId, string revokedBy)
     {
+        var adminDefined = false;
+        if (!adminDefined) throw new UnauthorizedException("JUST ADMIN");
+
         if (string.IsNullOrEmpty(userId)) throw new ArgumentException("User ID cannot be null or empty", nameof(userId));
         if (string.IsNullOrEmpty(revokedBy)) throw new ArgumentException("Revoked by cannot be null or empty", nameof(revokedBy));
 
@@ -255,6 +258,8 @@ public class AuthService : IAuthService
 
     public async Task CleanupExpiredTokensAsync()
     {
+        var adminDefined = false;
+        if (!adminDefined) throw new UnauthorizedException("JUST ADMIN");
         await _tokenRepository.RevokeExpiredTokensAsync();
         _logger.LogInformation("Expired tokens cleanup completed");
     }

@@ -127,4 +127,30 @@ public class AuthController : ControllerBase
         _logger.LogInformation("Token cleanup completed by admin {AdminId}", currentAdminId);
         return NoContent();
     }
+
+    [HttpGet("test")]
+    [Authorize]
+    [ProducesResponseType(typeof(IActionResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
+    public ActionResult<IActionResult> TestAuth()
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userName = User.FindFirst(ClaimTypes.Name)?.Value;
+        var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+
+        _logger.LogInformation("Test auth endpoint accessed by user: {UserId} ({UserName})", userId, userName);
+
+        return Ok(new
+        {
+            message = "¡Autenticación exitosa!",
+            user = new
+            {
+                id = userId,
+                name = userName,
+                email = userEmail,
+                authenticated = true,
+                timestamp = DateTime.UtcNow
+            }
+        });
+    }
 }

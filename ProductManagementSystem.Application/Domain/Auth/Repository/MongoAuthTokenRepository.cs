@@ -22,25 +22,25 @@ public class MongoAuthTokenRepository : IAuthTokenRepository
         var indexOptions = new CreateIndexOptions
         {
             Unique = true,
-            Name = "idx_auth_token_unique"
+            Name = MongoAuthTokenRepositoryValues.Values.IndexNameAuthTokenUnique
         };
 
         _collection.Indexes.CreateOneAsync(new CreateIndexModel<AuthToken>(indexKeysDefinition, indexOptions));
 
         var userIdIndex = Builders<AuthToken>.IndexKeys.Ascending(x => x.UserId);
-        _collection.Indexes.CreateOneAsync(new CreateIndexModel<AuthToken>(userIdIndex, new CreateIndexOptions { Name = "idx_auth_token_userid" }));
+        _collection.Indexes.CreateOneAsync(new CreateIndexModel<AuthToken>(userIdIndex, new CreateIndexOptions { Name = MongoAuthTokenRepositoryValues.Values.IndexNameAuthTokenUserId }));
 
         var expirationIndex = Builders<AuthToken>.IndexKeys.Ascending(x => x.ExpiresAt);
         _collection.Indexes.CreateOneAsync(new CreateIndexModel<AuthToken>(expirationIndex, new CreateIndexOptions
         {
-            Name = "idx_auth_token_expiration",
+            Name = MongoAuthTokenRepositoryValues.Values.IndexNameAuthTokenExpiration,
             ExpireAfter = TimeSpan.Zero
         }));
 
         var compositeIndex = Builders<AuthToken>.IndexKeys
             .Ascending(x => x.UserId)
             .Ascending(x => x.TokenType);
-        _collection.Indexes.CreateOneAsync(new CreateIndexModel<AuthToken>(compositeIndex, new CreateIndexOptions { Name = "idx_auth_token_userid_type" }));
+        _collection.Indexes.CreateOneAsync(new CreateIndexModel<AuthToken>(compositeIndex, new CreateIndexOptions { Name = MongoAuthTokenRepositoryValues.Values.IndexNameAuthTokenUserIdType }));
     }
 
     public async Task<AuthToken> CreateAsync(AuthToken authToken)
@@ -109,22 +109,22 @@ public class MongoAuthTokenRepository : IAuthTokenRepository
 
     public async Task DeleteAsync(string id)
     {
-        if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException("ID cannot be null or empty", nameof(id));
+        if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException(MongoAuthTokenRepositoryValues.Errors.UserIdCannotBeNullOrEmpty, nameof(id));
 
         await _collection.DeleteOneAsync(x => x.Id == id);
     }
 
     public async Task DeleteByUserIdAsync(string userId)
     {
-        if (string.IsNullOrWhiteSpace(userId)) throw new ArgumentException("User ID cannot be null or empty", nameof(userId));
+        if (string.IsNullOrWhiteSpace(userId)) throw new ArgumentException(MongoAuthTokenRepositoryValues.Errors.UserIdCannotBeNullOrEmpty, nameof(userId));
 
         await _collection.DeleteManyAsync(x => x.UserId == userId);
     }
 
     public async Task RevokeAllTokensByUserIdAsync(string userId, string revokedBy)
     {
-        if (string.IsNullOrWhiteSpace(userId)) throw new ArgumentException("User ID cannot be null or empty", nameof(userId));
-        if (string.IsNullOrWhiteSpace(revokedBy)) throw new ArgumentException("Revoked by cannot be null or empty", nameof(revokedBy));
+        if (string.IsNullOrWhiteSpace(userId)) throw new ArgumentException(MongoAuthTokenRepositoryValues.Errors.UserIdCannotBeNullOrEmpty, nameof(userId));
+        if (string.IsNullOrWhiteSpace(revokedBy)) throw new ArgumentException(MongoAuthTokenRepositoryValues.Errors.RevokedByCannotBeNullOrEmpty, nameof(revokedBy));
 
         var filter = Builders<AuthToken>.Filter.And(
             Builders<AuthToken>.Filter.Eq(x => x.UserId, userId),
@@ -149,8 +149,27 @@ public class MongoAuthTokenRepository : IAuthTokenRepository
         var update = Builders<AuthToken>.Update
             .Set(x => x.IsRevoked, true)
             .Set(x => x.RevokedAt, DateTime.UtcNow)
-            .Set(x => x.RevokedBy, "System - Expired");
+            .Set(x => x.RevokedBy, MongoAuthTokenRepositoryValues.Values.System);
 
         await _collection.UpdateManyAsync(filter, update);
+    }
+}
+
+public static class MongoAuthTokenRepositoryValues
+{
+    public static class Errors
+    {
+        public const string UserIdCannotBeNullOrEmpty = "User ID cannot be null or empty";
+        public const string RevokedByCannotBeNullOrEmpty = "Revoked by cannot be null or empty";
+    }
+
+
+    public static class Values
+    {
+        public const string System = "System";
+        public const string IndexNameAuthTokenUnique = "idx_auth_token_unique";
+        public const string IndexNameAuthTokenUserId = "idx_auth_token_userid";
+        public const string IndexNameAuthTokenExpiration = "idx_auth_token_expiration";
+        public const string IndexNameAuthTokenUserIdType = "idx_auth_token_userid_type";
     }
 }

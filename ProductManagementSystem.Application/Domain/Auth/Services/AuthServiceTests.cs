@@ -428,7 +428,7 @@ public class AuthServiceTests
             .EnableExcelExport()
             .Build();
 
-        var price = new Price(29.99m, EnumCurrency.USD);
+        var price = Price.Create(29.99m, EnumCurrency.USD);
 
         var subscription = Subscription.Create(
             "Test Plan",
