@@ -69,21 +69,26 @@ public class ProductMappingProfile : Profile
 
     private static Deduction CreateDeduction(AddDeductionDTO src)
     {
-        return src.Type switch
+        var application = Enum.Parse<EnumDeductionApplication>(src.Application);
+
+        if (src.Type == EnumDeductionType.Percentage.ToString())
         {
-            EnumDeductionType.Percentage when src.Percentage.HasValue =>
-                Deduction.Create(src.ConceptCode, src.Name, src.Application, src.Percentage.Value, src.Description),
+            if (src.Percentage.HasValue)
+            {
+                return Deduction.Create(src.ConceptCode, src.Name, application, src.Percentage.Value, src.Description);
+            }
+            return Deduction.Create(src.ConceptCode, src.Name, application, src.Description);
+        }
 
-            EnumDeductionType.FixedValue when src.Price != null =>
-                Deduction.Create(src.ConceptCode, src.Name, src.Application, Money.Create(src.Price.Value, src.Price.Currency), src.Description),
+        if (src.Type == EnumDeductionType.FixedValue.ToString())
+        {
+            if (src.Price != null)
+            {
+                return Deduction.Create(src.ConceptCode, src.Name, application, Money.Create(src.Price.Value, src.Price.Currency), src.Description);
+            }
+            return Deduction.Create(src.ConceptCode, src.Name, application, src.Description);
+        }
 
-            EnumDeductionType.Percentage when !src.Percentage.HasValue =>
-                Deduction.Create(src.ConceptCode, src.Name, src.Application, src.Description),
-
-            EnumDeductionType.FixedValue when src.Price == null =>
-                Deduction.Create(src.ConceptCode, src.Name, src.Application, src.Description),
-
-            _ => throw new ArgumentException($"Invalid deduction configuration: Type={src.Type}")
-        };
+        throw new FluentValidation.ValidationException($"Unknown deduction type: {src.Type}");
     }
 }

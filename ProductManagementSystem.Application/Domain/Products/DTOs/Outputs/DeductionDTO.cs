@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using ProductManagementSystem.Application.Domain.Shared.DTOs;
 using ProductManagementSystem.Application.Domain.Shared.Enum;
@@ -6,18 +7,24 @@ namespace ProductManagementSystem.Application.Domain.Products.DTOs.Outputs;
 
 public record DeductionDTO
 {
+    [Required(ErrorMessage = "Concept code is required")]
     [JsonPropertyName("concept_code")]
     public required string ConceptCode { get; set; }
     [JsonPropertyName("name")]
+    [Required(ErrorMessage = "Name is required")]
     public required string Name { get; set; }
     [JsonPropertyName("description")]
     public string? Description { get; set; }
-    [JsonPropertyName("value")]
-    public MoneyDTO? Value { get; set; }
+    [JsonPropertyName("price")]
+    public MoneyDTO? Price { get; set; }
     [JsonPropertyName("percentage")]
     public decimal? Percentage { get; set; }
     [JsonPropertyName("type")]
-    public required EnumDeductionType Type { get; set; }
+    [Required(ErrorMessage = "Type is required")]
+    [EnumDataType(typeof(EnumDeductionType), ErrorMessage = "Invalid type")]
+    public required string Type { get; set; }
     [JsonPropertyName("application")]
-    public required EnumDeductionApplication Application { get; set; }
+    [Required(ErrorMessage = "Application is required")]
+    [EnumDataType(typeof(EnumDeductionApplication), ErrorMessage = "Invalid application")]
+    public required string Application { get; set; }
 }

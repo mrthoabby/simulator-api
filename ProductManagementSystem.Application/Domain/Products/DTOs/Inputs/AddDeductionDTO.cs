@@ -24,12 +24,12 @@ public class AddDeductionDTO
     [Required(ErrorMessage = "Deduction type is required")]
     [EnumDataType(typeof(EnumDeductionType), ErrorMessage = "Invalid deduction type")]
     [JsonPropertyName("type")]
-    public EnumDeductionType Type { get; set; }
+    public required string Type { get; set; }
 
     [Required(ErrorMessage = "Deduction application is required")]
     [EnumDataType(typeof(EnumDeductionApplication), ErrorMessage = "Invalid deduction application")]
     [JsonPropertyName("application")]
-    public EnumDeductionApplication Application { get; set; }
+    public required string Application { get; set; }
 
     [Range(0.01, 100, ErrorMessage = "Deduction percentage must be between 0.01 and 100")]
     [JsonPropertyName("percentage")]
