@@ -4,17 +4,16 @@ using ProductManagementSystem.Application.Domain.Shared.DTOs;
 
 namespace ProductManagementSystem.Application.Domain.Products.DTOs.Inputs;
 
-public struct CreateOfferDTO
+public record CreateOfferDTO
 {
 
     [Url(ErrorMessage = "Offer URL must be a valid URL")]
-    [Required(ErrorMessage = "Offer URL is required")]
     [JsonPropertyName("url")]
-    public string Url { get; set; }
+    public string? Url { get; set; }
 
     [Required(ErrorMessage = "Offer price is required")]
     [JsonPropertyName("price")]
-    public MoneyDTO Price { get; set; }
+    public required MoneyDTO Price { get; set; }
 
     [Required(ErrorMessage = "Quantity is required")]
     [Range(1, int.MaxValue, ErrorMessage = "Quantity must be greater than 0")]

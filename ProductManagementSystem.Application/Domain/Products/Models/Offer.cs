@@ -5,9 +5,9 @@ namespace ProductManagementSystem.Application.Domain.Products.Models;
 
 public class Offer
 {
-    public string Url { get; set; } = string.Empty;
-    public Money Price { get; set; }
-    public int MinQuantity { get; set; }
+    public string? Url { get; private set; }
+    public Money Price { get; private set; }
+    public int MinQuantity { get; private set; }
 
     private Offer(string url, Money price, int minQuantity)
     {
@@ -16,9 +16,27 @@ public class Offer
         MinQuantity = minQuantity;
     }
 
+    private Offer(Money price, int minQuantity)
+    {
+        Price = price;
+        MinQuantity = minQuantity;
+    }
+
     public static Offer Create(string url, Money price, int minQuantity)
     {
         var offer = new Offer(url, price, minQuantity);
+        var validator = new OfferValidator();
+        var validationResult = validator.Validate(offer);
+        if (!validationResult.IsValid)
+        {
+            throw new ValidationException(validationResult.Errors);
+        }
+        return offer;
+    }
+
+    public static Offer Create(Money price, int minQuantity)
+    {
+        var offer = new Offer(price, minQuantity);
         var validator = new OfferValidator();
         var validationResult = validator.Validate(offer);
         if (!validationResult.IsValid)
@@ -35,8 +53,9 @@ public class OfferValidator : AbstractValidator<Offer>
     public OfferValidator()
     {
         RuleFor(x => x.Url)
-            .NotEmpty().WithMessage("Offer URL is required")
-            .Must(BeAValidUrl).WithMessage("Offer URL must be a valid URL");
+            .Must((offer, url) => url != null && BeAValidUrl(url))
+            .WithMessage("Offer URL must be a valid URL")
+            .When(x => x.Url != null);
 
         RuleFor(x => x.MinQuantity)
             .GreaterThan(0).WithMessage("Quantity must be greater than 0");

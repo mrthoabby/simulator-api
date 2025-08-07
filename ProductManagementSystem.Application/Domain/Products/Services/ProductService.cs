@@ -8,16 +8,17 @@ using ProductManagementSystem.Application.Domain.Shared.Enum;
 using AutoMapper;
 using ProductManagementSystem.Application.Common.Errors;
 
+
 namespace ProductManagementSystem.Application.Domain.Products.Services;
 
 public class ProductService : IProductService
 {
     private readonly IProductRepository _productRepository;
-    private readonly DeductionDomainRules _deductionDomainRules;
+    private readonly IDeductionDomainRules _deductionDomainRules;
     private readonly IMapper _mapper;
     private readonly ILogger<ProductService> _logger;
 
-    public ProductService(IProductRepository productRepository, DeductionDomainRules deductionDomainRules, IMapper mapper, ILogger<ProductService> logger)
+    public ProductService(IProductRepository productRepository, IDeductionDomainRules deductionDomainRules, IMapper mapper, ILogger<ProductService> logger)
     {
         _productRepository = productRepository;
         _deductionDomainRules = deductionDomainRules;
@@ -195,50 +196,10 @@ public class ProductService : IProductService
     }
 
     // Deduction operations
-    public async Task<DeductionDTO> AddDeductionAsync(string productId, AddDeductionDTO request)
+    public Task<DeductionDTO> AddDeductionAsync(string productId, AddDeductionDTO request)
     {
 
-        _logger.LogInformation("Adding deduction {ConceptCode} to product {ProductId}",
-            request.ConceptCode, productId);
-
-        // Parsear el tipo de aplicación
-        var application = Enum.Parse<EnumDeductionApplication>(request.Application.ToString());
-
-        // Crear la deducción usando el builder pattern
-        var deductionBuilder = Deduction.CreateBuilder(
-            request.ConceptCode,
-            request.Name,
-            application,
-            request.Description
-        );
-
-        Deduction deduction;
-        if (request.Type == EnumDeductionType.Percentage)
-        {
-            deduction = deductionBuilder.WithPercentage(request.Percentage ?? 0).Build();
-        }
-        else
-        {
-            if (request.Price != null)
-            {
-                var currency = Enum.Parse<EnumCurrency>(request.Price.Currency.ToString());
-                var price = Money.Create(request.Price.Value, currency);
-                deduction = deductionBuilder.WithPrice(price).Build();
-            }
-            else
-            {
-                deduction = deductionBuilder.Build();
-            }
-        }
-
-        var addedDeduction = await _productRepository.AddDeductionAsync(productId, deduction);
-
-        var deductionDto = _mapper.Map<DeductionDTO>(addedDeduction);
-
-        _logger.LogInformation("Deduction {ConceptCode} added successfully to product {ProductId}",
-            request.ConceptCode, productId);
-
-        return deductionDto;
+        throw new NotImplementedException();
 
     }
 
@@ -327,7 +288,7 @@ public class ProductService : IProductService
             request.Url, productId);
 
         var price = Money.Create(request.Price.Value, request.Price.Currency);
-        var competitor = Competitor.Create(request.Url, price, request.ImageUrl);
+        var competitor = Competitor.Create(request.Name, price, request.Url, request.ImageUrl);
 
         // Agregar el competidor al producto
         var addedCompetitor = await _productRepository.AddCompetitorAsync(productId, competitor);

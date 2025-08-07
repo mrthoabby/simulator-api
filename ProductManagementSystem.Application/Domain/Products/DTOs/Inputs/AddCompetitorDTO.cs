@@ -4,12 +4,15 @@ using ProductManagementSystem.Application.Domain.Shared.DTOs;
 
 namespace ProductManagementSystem.Application.Domain.Products.DTOs.Inputs;
 
-public struct AddCompetitorDTO
+public record AddCompetitorDTO
 {
-    [Required(ErrorMessage = "Competitor URL is required")]
+    [Required(ErrorMessage = "Competitor name is required")]
+    [JsonPropertyName("name")]
+    public required string Name { get; set; }
+
     [Url(ErrorMessage = "Competitor URL must be a valid URL")]
     [JsonPropertyName("url")]
-    public string Url { get; set; }
+    public string? Url { get; set; }
 
     [Url(ErrorMessage = "Image URL must be a valid URL")]
     [JsonPropertyName("image_url")]
@@ -17,6 +20,6 @@ public struct AddCompetitorDTO
 
     [Required(ErrorMessage = "Competitor price is required")]
     [JsonPropertyName("price")]
-    public MoneyDTO Price { get; set; }
+    public required MoneyDTO Price { get; set; }
 
 }

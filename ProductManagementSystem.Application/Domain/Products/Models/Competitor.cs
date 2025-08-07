@@ -5,20 +5,23 @@ namespace ProductManagementSystem.Application.Domain.Products.Models;
 
 public class Competitor
 {
-    public string Url { get; init; }
-    public string? ImageUrl { get; init; }
-    public Money Price { get; init; }
+    public string Name { get; private set; }
+    public Money Price { get; private set; }
+    public string? Url { get; private set; }
+    public string? ImageUrl { get; private set; }
 
-    private Competitor(string url, Money price, string? imageUrl = null)
+    private Competitor(string name, Money price, string? url = null, string? imageUrl = null)
     {
-        Url = url;
+        Name = name;
         Price = price;
+        Url = url;
         ImageUrl = imageUrl;
     }
 
-    public static Competitor Create(string url, Money price, string? imageUrl = null)
+
+    public static Competitor Create(string name, Money price, string? url = null, string? imageUrl = null)
     {
-        var competitor = new Competitor(url, price, imageUrl);
+        var competitor = new Competitor(name, price, url, imageUrl);
         var validator = new CompetitorValidator();
         var validationResult = validator.Validate(competitor);
         if (!validationResult.IsValid)
@@ -33,9 +36,13 @@ public class CompetitorValidator : AbstractValidator<Competitor>
 {
     public CompetitorValidator()
     {
+        RuleFor(x => x.Name)
+            .NotEmpty().WithMessage("Competitor name is required");
+
         RuleFor(x => x.Url)
-            .NotEmpty().WithMessage("Competitor URL is required")
-            .Must(BeAValidUrl).WithMessage("Competitor URL must be a valid URL");
+            .Must((competitor, url) => url != null && BeAValidUrl(url))
+            .WithMessage("Competitor URL must be a valid URL")
+            .When(x => x.Url != null);
 
         RuleFor(x => x.Price)
             .NotEmpty().WithMessage("Competitor price is required");

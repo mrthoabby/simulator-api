@@ -6,7 +6,7 @@ public class Provider
 {
     public string Name { get; set; }
     public string Url { get; set; }
-    public List<Offer>? Offers { get; set; }
+    public List<Offer> Offers { get; set; }
 
 
     private Provider(string name, string url, List<Offer> offers)
@@ -51,7 +51,8 @@ public class ProviderValidator : AbstractValidator<Provider>
             .NotEmpty().WithMessage("Provider URL is required")
             .Must(BeAValidUrl).WithMessage("Provider URL must be a valid URL");
 
-
+        RuleFor(x => x.Offers)
+            .NotEmpty().WithMessage("Provider must have at least one offer");
     }
 
     private bool BeAValidUrl(string url)
