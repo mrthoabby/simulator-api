@@ -1,6 +1,5 @@
 using FluentValidation;
 using ProductManagementSystem.Application.Domain.Shared.Enum;
-using ProductManagementSystem.Application.Domain.Shared.Type.Prices;
 
 namespace ProductManagementSystem.Application.Domain.Shared.Type;
 
