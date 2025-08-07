@@ -5,6 +5,7 @@ namespace ProductManagementSystem.Application.Domain.Products.Models;
 
 public class Competitor
 {
+    public string Id { get; private set; }
     public string Name { get; private set; }
     public Money Price { get; private set; }
     public string? Url { get; private set; }
@@ -12,6 +13,7 @@ public class Competitor
 
     private Competitor(string name, Money price, string? url = null, string? imageUrl = null)
     {
+        Id = Guid.NewGuid().ToString();
         Name = name;
         Price = price;
         Url = url;

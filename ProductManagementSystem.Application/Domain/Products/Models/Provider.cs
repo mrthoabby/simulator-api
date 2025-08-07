@@ -4,6 +4,7 @@ namespace ProductManagementSystem.Application.Domain.Products.Models;
 
 public class Provider
 {
+    public string Id { get; private set; }
     public string Name { get; set; }
     public string Url { get; set; }
     public List<Offer> Offers { get; set; }
@@ -11,6 +12,7 @@ public class Provider
 
     private Provider(string name, string url, List<Offer> offers)
     {
+        Id = Guid.NewGuid().ToString();
         Name = name;
         Url = url;
         Offers = offers;

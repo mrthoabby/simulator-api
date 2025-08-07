@@ -132,14 +132,17 @@ public class MongoProductRepository : IProductRepository
                 .Limit(paginationConfigs.PageSize)
                 .ToListAsync();
 
+            var totalPages = paginationConfigs.PageSize == 0 ? 1 : (int)Math.Ceiling((double)totalCount / paginationConfigs.PageSize);
+            var pageSize = paginationConfigs.PageSize == 0 ? totalCount : paginationConfigs.PageSize;
+
             var result = new PaginatedResult<Product>
             {
                 Items = products,
                 TotalCount = (int)totalCount,
                 Page = paginationConfigs.Page,
-                PageSize = paginationConfigs.PageSize,
-                TotalPages = (int)Math.Ceiling((double)totalCount / paginationConfigs.PageSize),
-                HasNextPage = paginationConfigs.Page < (int)Math.Ceiling((double)totalCount / paginationConfigs.PageSize),
+                PageSize = pageSize,
+                TotalPages = totalPages,
+                HasNextPage = paginationConfigs.Page < totalPages,
                 HasPreviousPage = paginationConfigs.Page > 1
             };
 

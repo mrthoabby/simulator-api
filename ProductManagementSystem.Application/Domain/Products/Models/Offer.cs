@@ -5,12 +5,14 @@ namespace ProductManagementSystem.Application.Domain.Products.Models;
 
 public class Offer
 {
+    public string Id { get; private set; }
     public string? Url { get; private set; }
     public Money Price { get; private set; }
     public int MinQuantity { get; private set; }
 
     private Offer(string url, Money price, int minQuantity)
     {
+        Id = Guid.NewGuid().ToString();
         Url = url;
         Price = price;
         MinQuantity = minQuantity;
@@ -18,6 +20,7 @@ public class Offer
 
     private Offer(Money price, int minQuantity)
     {
+        Id = Guid.NewGuid().ToString();
         Price = price;
         MinQuantity = minQuantity;
     }

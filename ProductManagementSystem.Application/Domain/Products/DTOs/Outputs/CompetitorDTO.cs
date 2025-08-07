@@ -5,6 +5,9 @@ namespace ProductManagementSystem.Application.Domain.Products.DTOs.Outputs;
 
 public record CompetitorDTO
 {
+    [JsonPropertyName("id")]
+    public required string Id { get; set; }
+
     [JsonPropertyName("url")]
     public required string Url { get; set; }
 

@@ -7,6 +7,8 @@ namespace ProductManagementSystem.Application.Domain.Products.DTOs.Outputs;
 
 public record DeductionDTO
 {
+    [JsonPropertyName("id")]
+    public required string Id { get; set; }
     [Required(ErrorMessage = "Concept code is required")]
     [JsonPropertyName("concept_code")]
     public required string ConceptCode { get; set; }
