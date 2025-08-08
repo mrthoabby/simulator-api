@@ -1,11 +1,11 @@
 using FluentValidation;
+using ProductManagementSystem.Application.Common.Domain.Type;
 using ProductManagementSystem.Application.Domain.Shared.Enum;
 
 namespace ProductManagementSystem.Application.Domain.Shared.Type;
 
-public class Concept
+public class Concept : Entity
 {
-    public string Id { get; private set; }
     public string ConceptCode { get; private set; }
     public string Name { get; private set; }
     public string? Description { get; private set; }
@@ -14,9 +14,8 @@ public class Concept
     public Money? Price { get; private set; }
     public EnumConceptApplication Application { get; private set; }
 
-    protected Concept(string conceptCode, string name, EnumConceptApplication application, Money money, string? description = null)
+    protected Concept(string conceptCode, string name, EnumConceptApplication application, Money money, string? description = null) : base()
     {
-        Id = Guid.NewGuid().ToString();
         ConceptCode = conceptCode;
         Name = name;
         Application = application;
@@ -26,18 +25,16 @@ public class Concept
         Type = EnumConceptType.FixedValue;
     }
 
-    protected Concept(string conceptCode, string name, EnumConceptApplication application, string? description = null)
+    protected Concept(string conceptCode, string name, EnumConceptApplication application, string? description = null) : base()
     {
-        Id = Guid.NewGuid().ToString();
         ConceptCode = conceptCode;
         Name = name;
         Application = application;
         Description = description;
     }
 
-    protected Concept(string conceptCode, string name, EnumConceptApplication application, decimal percentage, string? description = null)
+    protected Concept(string conceptCode, string name, EnumConceptApplication application, decimal percentage, string? description = null) : base()
     {
-        Id = Guid.NewGuid().ToString();
         ConceptCode = conceptCode;
         Name = name;
         Application = application;
