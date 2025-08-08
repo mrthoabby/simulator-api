@@ -1,6 +1,6 @@
 namespace ProductManagementSystem.Application.Domain.Shared.Enum;
 
-public enum EnumDeductionType
+public enum EnumConceptType
 {
     Percentage,
     FixedValue

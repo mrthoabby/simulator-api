@@ -3,51 +3,55 @@ using ProductManagementSystem.Application.Domain.Shared.Enum;
 
 namespace ProductManagementSystem.Application.Domain.Shared.Type;
 
-public class Deduction
+public class Concept
 {
+    public string Id { get; private set; }
     public string ConceptCode { get; private set; }
     public string Name { get; private set; }
     public string? Description { get; private set; }
-    public EnumDeductionType Type { get; private set; }
+    public EnumConceptType Type { get; private set; }
     public decimal? Percentage { get; private set; }
     public Money? Price { get; private set; }
-    public EnumDeductionApplication Application { get; private set; }
+    public EnumConceptApplication Application { get; private set; }
 
-    protected Deduction(string conceptCode, string name, EnumDeductionApplication application, Money money, string? description = null)
+    protected Concept(string conceptCode, string name, EnumConceptApplication application, Money money, string? description = null)
     {
+        Id = Guid.NewGuid().ToString();
         ConceptCode = conceptCode;
         Name = name;
         Application = application;
         Description = description;
         Price = money;
         Percentage = null;
-        Type = EnumDeductionType.FixedValue;
+        Type = EnumConceptType.FixedValue;
     }
 
-    protected Deduction(string conceptCode, string name, EnumDeductionApplication application, string? description = null)
+    protected Concept(string conceptCode, string name, EnumConceptApplication application, string? description = null)
     {
+        Id = Guid.NewGuid().ToString();
         ConceptCode = conceptCode;
         Name = name;
         Application = application;
         Description = description;
     }
 
-    protected Deduction(string conceptCode, string name, EnumDeductionApplication application, decimal percentage, string? description = null)
+    protected Concept(string conceptCode, string name, EnumConceptApplication application, decimal percentage, string? description = null)
     {
+        Id = Guid.NewGuid().ToString();
         ConceptCode = conceptCode;
         Name = name;
         Application = application;
         Description = description;
         Percentage = percentage;
         Price = null;
-        Type = EnumDeductionType.Percentage;
+        Type = EnumConceptType.Percentage;
     }
 
 
 
-    public static Deduction Create(string conceptCode, string name, EnumDeductionApplication application, decimal percentage, string? description = null)
+    public static Concept Create(string conceptCode, string name, EnumConceptApplication application, decimal percentage, string? description = null)
     {
-        var deduction = new Deduction(conceptCode, name, application, percentage, description);
+        var deduction = new Concept(conceptCode, name, application, percentage, description);
 
         var validator = new DeductionValidator();
         var validationResult = validator.Validate(deduction);
@@ -60,9 +64,9 @@ public class Deduction
         return deduction;
     }
 
-    public static Deduction Create(string conceptCode, string name, EnumDeductionApplication application, Money price, string? description = null)
+    public static Concept Create(string conceptCode, string name, EnumConceptApplication application, Money price, string? description = null)
     {
-        var deduction = new Deduction(conceptCode, name, application, price, description);
+        var deduction = new Concept(conceptCode, name, application, price, description);
 
         var validator = new DeductionValidator();
         var validationResult = validator.Validate(deduction);
@@ -75,9 +79,9 @@ public class Deduction
         return deduction;
     }
 
-    public static Deduction Create(string conceptCode, string name, EnumDeductionApplication application, string? description = null)
+    public static Concept Create(string conceptCode, string name, EnumConceptApplication application, string? description = null)
     {
-        var deduction = new Deduction(conceptCode, name, application, description);
+        var deduction = new Concept(conceptCode, name, application, description);
 
         var validator = new DeductionValidator();
         var validationResult = validator.Validate(deduction);
@@ -91,7 +95,7 @@ public class Deduction
     }
 }
 
-public class DeductionValidator : AbstractValidator<Deduction>
+public class DeductionValidator : AbstractValidator<Concept>
 {
     public DeductionValidator()
     {
@@ -111,8 +115,8 @@ public class DeductionValidator : AbstractValidator<Deduction>
             .IsInEnum().WithMessage("Deduction application must be a valid enum value");
 
         RuleFor(x => x)
-            .Must(x => (x.Type == EnumDeductionType.Percentage && x.Percentage.HasValue && x.Price == null) ||
-                      (x.Type == EnumDeductionType.FixedValue && !x.Percentage.HasValue && x.Price != null))
+            .Must(x => (x.Type == EnumConceptType.Percentage && x.Percentage.HasValue && x.Price == null) ||
+                      (x.Type == EnumConceptType.FixedValue && !x.Percentage.HasValue && x.Price != null))
             .WithMessage("When type is Percentage, percentage value is required and price must be null. When type is FixedValue, price is required and percentage must be null");
     }
 }

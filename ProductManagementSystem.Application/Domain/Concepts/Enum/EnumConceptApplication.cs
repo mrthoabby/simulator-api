@@ -1,7 +1,8 @@
 namespace ProductManagementSystem.Application.Domain.Shared.Enum;
 
-public enum EnumDeductionApplication
+public enum EnumConceptApplication
 {
     AddToProduct,
-    MultiplyCubicMeter
+    MultiplyCubicMeter,
+    MultiplyByProductValue
 }

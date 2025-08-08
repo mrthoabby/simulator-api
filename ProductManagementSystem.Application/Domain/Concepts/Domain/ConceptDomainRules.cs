@@ -1,19 +1,19 @@
 using ProductManagementSystem.Application.Common.Errors;
-using ProductManagementSystem.Application.Domain.DeductionCodes.Services;
+using ProductManagementSystem.Application.Domain.ConceptCodes.Services;
 using ProductManagementSystem.Application.Domain.Shared.Enum;
 
 namespace ProductManagementSystem.Application.Domain.Shared.Type;
 
-public class DeductionDomainRules : IDeductionDomainRules
+public class ConceptDomainRules : IConceptDomainRules
 {
-    private readonly IDeductionCodeService _deductionCodeService;
+    private readonly IConceptCodeService _deductionCodeService;
 
-    public DeductionDomainRules(IDeductionCodeService deductionCodeService)
+    public ConceptDomainRules(IConceptCodeService deductionCodeService)
     {
         _deductionCodeService = deductionCodeService;
     }
 
-    private async Task<bool> hasValidConceptCode(List<Deduction> deductions)
+    private async Task<bool> hasValidConceptCode(List<Concept> deductions)
     {
         var deductionCodes = await _deductionCodeService.GetAllAsync();
         foreach (var deduction in deductions)
@@ -27,12 +27,12 @@ public class DeductionDomainRules : IDeductionDomainRules
     }
 
 
-    public async Task Validate(List<Deduction> deductions)
+    public async Task Validate(List<Concept> deductions)
     {
         await hasValidConceptCode(deductions);
     }
 
-    public Task Validate(Deduction deduction)
+    public Task Validate(Concept deduction)
     {
         throw new NotImplementedException();
     }
