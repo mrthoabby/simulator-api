@@ -18,10 +18,10 @@ public interface IProductRepository
     Task RemoveProviderAsync(string productId, string providerName);
     Task<List<Provider>> GetProvidersAsync(string productId);
 
-    // Deduction operations
-    Task<Deduction> AddDeductionAsync(string productId, Deduction deduction);
-    Task RemoveDeductionAsync(string productId, string conceptCode);
-    Task<List<Deduction>> GetDeductionsAsync(string productId);
+    // Concept operations
+    Task<Concept> AddConceptAsync(string productId, Concept concept);
+    Task RemoveConceptAsync(string productId, string conceptCode);
+    Task<List<Concept>> GetConceptsAsync(string productId);
 
     // Competitor operations
     Task<Competitor> AddCompetitorAsync(string productId, Competitor competitor);

@@ -19,8 +19,8 @@ public struct CreateProductDTO
     [JsonPropertyName("image_url")]
     public string? ImageUrl { get; set; }
 
-    [JsonPropertyName("deductions")]
-    public List<AddDeductionDTO>? Deductions { get; set; }
+    [JsonPropertyName("concepts")]
+    public List<AddConceptDTO>? Concepts { get; set; }
 
     [JsonPropertyName("providers")]
     public List<AddProviderDTO>? Providers { get; set; }

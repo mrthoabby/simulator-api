@@ -10,7 +10,7 @@ public class Product
     public string Name { get; private set; }
     public Money Price { get; private set; }
     public string? ImageUrl { get; private set; }
-    public List<Deduction>? Deductions { get; private set; }
+    public List<Concept>? Concepts { get; private set; }
     public List<Provider>? Providers { get; private set; }
     public List<Competitor>? Competitors { get; private set; }
     public DateTime CreatedAt { get; private set; }
@@ -30,7 +30,7 @@ public class Product
         private string _name;
         private Money _price;
         private string? _imageUrl;
-        private List<Deduction>? _deductions;
+        private List<Concept>? _concepts;
         private List<Provider>? _providers;
         private List<Competitor>? _competitors;
 
@@ -58,9 +58,9 @@ public class Product
             return this;
         }
 
-        public ProductBuilder WithDeductions(List<Deduction> deductions)
+        public ProductBuilder WithConcepts(List<Concept> concepts)
         {
-            _deductions = deductions;
+            _concepts = concepts;
             return this;
         }
 
@@ -87,7 +87,7 @@ public class Product
                 throw new ValidationException(string.Join(", ", errors));
             }
 
-            product.Deductions = _deductions;
+            product.Concepts = _concepts;
             product.Providers = _providers;
             product.Competitors = _competitors;
 
@@ -100,8 +100,6 @@ public class Product
         return new ProductBuilder(name, price);
     }
 }
-
-// Validador de FluentValidation para Product
 public class ProductValidator : AbstractValidator<Product>
 {
     public ProductValidator()

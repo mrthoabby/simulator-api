@@ -1,6 +1,7 @@
 using ProductManagementSystem.Application.Common.Domain.Type;
 using ProductManagementSystem.Application.Domain.Products.DTOs.Inputs;
 using ProductManagementSystem.Application.Domain.Products.DTOs.Outputs;
+using ProductManagementSystem.Application.Domain.Shared.DTOs;
 
 
 namespace ProductManagementSystem.Application.Domain.Products.Services;
@@ -8,25 +9,25 @@ namespace ProductManagementSystem.Application.Domain.Products.Services;
 public interface IProductService
 {
     // Product operations
-    Task<ProductDTO> CreateAsync(CreateProductDTO request);
+    Task<ProductDTO> CreateAsync(CreateProductDTO dto);
     Task<ProductDTO?> GetByIdAsync(string id);
-    Task<PaginatedResult<ProductDTO>> GetAllAsync(PaginationConfigs paginationConfigs, FilterProductDTO? filter = null, string? search = null);
-    Task<ProductDTO> UpdateAsync(string id, UpdateProductDTO request);
-    Task<ProductDTO> UpdateImageAsync(string id, UpdateProductImageDTO request);
+    Task<PaginatedResult<ProductDTO>> GetAllAsync(PaginationConfigDTO paginationConfigs, FilterProductDTO? filter = null, string? search = null);
+    Task<ProductDTO> UpdateAsync(string id, UpdateProductDTO dto);
+    Task<ProductDTO> UpdateImageAsync(string id, UpdateProductImageDTO dto);
     Task DeleteAsync(string id);
 
-    // Deduction operations
-    Task<DeductionDTO> AddDeductionAsync(string productId, AddDeductionDTO request);
-    Task RemoveDeductionAsync(string productId, string conceptCode);
-    Task<List<DeductionDTO>> GetDeductionsAsync(string productId);
+    // Concept operations
+    Task<ConceptDTO> AddConceptAsync(string productId, AddConceptDTO dto);
+    Task RemoveConceptAsync(string productId, string conceptCode);
+    Task<List<ConceptDTO>> GetConceptsAsync(string productId);
 
     // Provider operations
-    Task<ProviderDTO> AddProviderAsync(string productId, AddProviderDTO request);
+    Task<ProviderDTO> AddProviderAsync(string productId, AddProviderDTO dto);
     Task RemoveProviderAsync(string productId, string providerName);
     Task<List<ProviderDTO>> GetProvidersAsync(string productId);
 
     // Competitor operations
-    Task<CompetitorDTO> AddCompetitorAsync(string productId, AddCompetitorDTO request);
+    Task<CompetitorDTO> AddCompetitorAsync(string productId, AddCompetitorDTO dto);
     Task RemoveCompetitorAsync(string productId, string competitorUrl);
     Task<List<CompetitorDTO>> GetCompetitorsAsync(string productId);
 }

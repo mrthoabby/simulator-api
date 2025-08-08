@@ -7,6 +7,7 @@ using ProductManagementSystem.Application.Domain.Shared.Type;
 using ProductManagementSystem.Application.Domain.Shared.Enum;
 using AutoMapper;
 using ProductManagementSystem.Application.Common.Errors;
+using ProductManagementSystem.Application.Domain.Shared.DTOs;
 
 
 namespace ProductManagementSystem.Application.Domain.Products.Services;
@@ -14,44 +15,44 @@ namespace ProductManagementSystem.Application.Domain.Products.Services;
 public class ProductService : IProductService
 {
     private readonly IProductRepository _productRepository;
-    private readonly IDeductionDomainRules _deductionDomainRules;
+    private readonly IConceptDomainRules _conceptDomainRules;
     private readonly IMapper _mapper;
     private readonly ILogger<ProductService> _logger;
 
-    public ProductService(IProductRepository productRepository, IDeductionDomainRules deductionDomainRules, IMapper mapper, ILogger<ProductService> logger)
+    public ProductService(IProductRepository productRepository, IConceptDomainRules conceptDomainRules, IMapper mapper, ILogger<ProductService> logger)
     {
         _productRepository = productRepository;
-        _deductionDomainRules = deductionDomainRules;
+        _conceptDomainRules = conceptDomainRules;
         _mapper = mapper;
         _logger = logger;
     }
 
 
 
-    public async Task<ProductDTO> CreateAsync(CreateProductDTO request)
+    public async Task<ProductDTO> CreateAsync(CreateProductDTO dto)
     {
-        _logger.LogInformation("Creating product: {Name}", request.Name);
-        var price = Money.Create(request.Price.Value, request.Price.Currency);
-        var productBuilder = Product.Create(request.Name, price);
-        if (!string.IsNullOrEmpty(request.ImageUrl))
-            productBuilder.WithImageUrl(request.ImageUrl);
+        _logger.LogInformation("Creating product: {Name}", dto.Name);
+        var price = Money.Create(dto.Price.Value, dto.Price.Currency);
+        var productBuilder = Product.Create(dto.Name, price);
+        if (!string.IsNullOrEmpty(dto.ImageUrl))
+            productBuilder.WithImageUrl(dto.ImageUrl);
 
-        if (request.Deductions != null && request.Deductions.Any())
+        if (dto.Concepts != null && dto.Concepts.Any())
         {
-            var deductions = _mapper.Map<List<Deduction>>(request.Deductions);
-            await _deductionDomainRules.Validate(deductions);
-            productBuilder.WithDeductions(deductions);
+            var concepts = _mapper.Map<List<Concept>>(dto.Concepts);
+            await _conceptDomainRules.Validate(concepts);
+            productBuilder.WithConcepts(concepts);
         }
 
-        if (request.Providers != null && request.Providers.Any())
+        if (dto.Providers != null && dto.Providers.Any())
             productBuilder
             .WithProviders(_mapper
-            .Map<List<Provider>>(request.Providers));
+            .Map<List<Provider>>(dto.Providers));
 
-        if (request.Competitors != null && request.Competitors.Any())
+        if (dto.Competitors != null && dto.Competitors.Any())
             productBuilder
             .WithCompetitors(_mapper
-            .Map<List<Competitor>>(request.Competitors));
+            .Map<List<Competitor>>(dto.Competitors));
 
         var product = productBuilder.Build();
 
@@ -85,14 +86,15 @@ public class ProductService : IProductService
         }
     }
 
-    public async Task<PaginatedResult<ProductDTO>> GetAllAsync(PaginationConfigs paginationConfigs, FilterProductDTO? filter = null, string? search = null)
+    public async Task<PaginatedResult<ProductDTO>> GetAllAsync(PaginationConfigDTO paginationConfigs, FilterProductDTO? filter = null, string? search = null)
     {
         try
         {
             _logger.LogInformation("Getting all products with pagination: Page {Page}, PageSize {PageSize}",
                 paginationConfigs.Page, paginationConfigs.PageSize);
 
-            var paginatedProducts = await _productRepository.GetAllAsync(paginationConfigs, filter, search);
+            var paginationConfig = _mapper.Map<PaginationConfigs>(paginationConfigs);
+            var paginatedProducts = await _productRepository.GetAllAsync(paginationConfig, filter, search);
 
             var productsDTO = _mapper.Map<List<ProductDTO>>(paginatedProducts.Items);
 
@@ -119,7 +121,7 @@ public class ProductService : IProductService
         }
     }
 
-    public async Task<ProductDTO> UpdateAsync(string id, UpdateProductDTO request)
+    public async Task<ProductDTO> UpdateAsync(string id, UpdateProductDTO dto)
     {
 
         _logger.LogInformation("Updating product with ID: {ProductId}", id);
@@ -133,17 +135,17 @@ public class ProductService : IProductService
 
         // Actualizar propiedades
         var productBuilder = Product.Create(existingProduct.Name, existingProduct.Price);
-        if (!string.IsNullOrEmpty(request.Name))
-            productBuilder.WithName(request.Name);
+        if (!string.IsNullOrEmpty(dto.Name))
+            productBuilder.WithName(dto.Name);
 
-        if (request.Price != null)
+        if (dto.Price != null)
         {
-            var currency = Enum.Parse<EnumCurrency>(request.Price.Currency.ToString());
-            productBuilder.WithPrice(Money.Create(request.Price.Value, currency));
+            var currency = Enum.Parse<EnumCurrency>(dto.Price.Currency.ToString());
+            productBuilder.WithPrice(Money.Create(dto.Price.Value, currency));
         }
 
-        if (!string.IsNullOrEmpty(request.ImageUrl))
-            productBuilder.WithImageUrl(request.ImageUrl);
+        if (!string.IsNullOrEmpty(dto.ImageUrl))
+            productBuilder.WithImageUrl(dto.ImageUrl);
 
         // Validar y actualizar
         var validatedProduct = productBuilder.Build();
@@ -156,7 +158,7 @@ public class ProductService : IProductService
 
     }
 
-    public async Task<ProductDTO> UpdateImageAsync(string id, UpdateProductImageDTO request)
+    public async Task<ProductDTO> UpdateImageAsync(string id, UpdateProductImageDTO dto)
     {
 
         _logger.LogInformation("Updating image for product with ID: {ProductId}", id);
@@ -170,8 +172,8 @@ public class ProductService : IProductService
 
         // Actualizar solo la imagen
         var productBuilder = Product.Create(existingProduct.Name, existingProduct.Price);
-        if (!string.IsNullOrEmpty(request.ImageUrl))
-            productBuilder.WithImageUrl(request.ImageUrl);
+        if (!string.IsNullOrEmpty(dto.ImageUrl))
+            productBuilder.WithImageUrl(dto.ImageUrl);
 
         // Validar y actualizar
         var validatedProduct = productBuilder.Build();
@@ -195,50 +197,61 @@ public class ProductService : IProductService
 
     }
 
-    // Deduction operations
-    public Task<DeductionDTO> AddDeductionAsync(string productId, AddDeductionDTO request)
+    // Concept operations
+    public async Task<ConceptDTO> AddConceptAsync(string productId, AddConceptDTO dto)
     {
 
-        throw new NotImplementedException();
+        _logger.LogInformation("Adding concept {ConceptCode} to product {ProductId}",
+            dto.ConceptCode, productId);
+
+        var concept = _mapper.Map<Concept>(dto);
+        var addedConcept = await _productRepository.AddConceptAsync(productId, concept);
+
+        var conceptDto = _mapper.Map<ConceptDTO>(addedConcept);
+
+        _logger.LogInformation("Concept {ConceptCode} added successfully to product {ProductId}",
+            dto.ConceptCode, productId);
+
+        return conceptDto;
 
     }
 
-    public async Task RemoveDeductionAsync(string productId, string conceptCode)
+    public async Task RemoveConceptAsync(string productId, string conceptCode)
     {
 
-        _logger.LogInformation("Removing deduction {ConceptCode} from product {ProductId}",
+        _logger.LogInformation("Removing concept {ConceptCode} from product {ProductId}",
             conceptCode, productId);
 
-        await _productRepository.RemoveDeductionAsync(productId, conceptCode);
+        await _productRepository.RemoveConceptAsync(productId, conceptCode);
 
-        _logger.LogInformation("Deduction {ConceptCode} removed successfully from product {ProductId}",
+        _logger.LogInformation("Concept {ConceptCode} removed successfully from product {ProductId}",
         conceptCode, productId);
 
     }
 
-    public async Task<List<DeductionDTO>> GetDeductionsAsync(string productId)
+    public async Task<List<ConceptDTO>> GetConceptsAsync(string productId)
     {
 
-        _logger.LogInformation("Getting deductions for product {ProductId}", productId);
+        _logger.LogInformation("Getting concepts for product {ProductId}", productId);
 
-        var deductions = await _productRepository.GetDeductionsAsync(productId);
-        var deductionDtos = _mapper.Map<List<DeductionDTO>>(deductions);
+        var concepts = await _productRepository.GetConceptsAsync(productId);
+        var conceptDtos = _mapper.Map<List<ConceptDTO>>(concepts);
 
-        _logger.LogInformation("Retrieved {Count} deductions for product {ProductId}",
-            deductionDtos.Count, productId);
+        _logger.LogInformation("Retrieved {Count} concepts for product {ProductId}",
+    conceptDtos.Count, productId);
 
-        return deductionDtos;
+        return conceptDtos;
 
     }
 
     // Provider operations
-    public async Task<ProviderDTO> AddProviderAsync(string productId, AddProviderDTO request)
+    public async Task<ProviderDTO> AddProviderAsync(string productId, AddProviderDTO dto)
     {
 
         _logger.LogInformation("Adding provider {ProviderName} to product {ProductId}",
-            request.Name, productId);
+            dto.Name, productId);
 
-        var provider = Provider.Create(request.Name, request.Url, new List<Offer>());
+        var provider = Provider.Create(dto.Name, dto.Url, new List<Offer>());
 
         // Agregar el proveedor al producto
         var addedProvider = await _productRepository.AddProviderAsync(productId, provider);
@@ -246,7 +259,7 @@ public class ProductService : IProductService
         var providerDto = _mapper.Map<ProviderDTO>(addedProvider);
 
         _logger.LogInformation("Provider {ProviderName} added successfully to product {ProductId}",
-            request.Name, productId);
+            dto.Name, productId);
 
         return providerDto;
 
@@ -281,14 +294,14 @@ public class ProductService : IProductService
     }
 
     // Competitor operations
-    public async Task<CompetitorDTO> AddCompetitorAsync(string productId, AddCompetitorDTO request)
+    public async Task<CompetitorDTO> AddCompetitorAsync(string productId, AddCompetitorDTO dto)
     {
 
         _logger.LogInformation("Adding competitor with URL {CompetitorUrl} to product {ProductId}",
-            request.Url, productId);
+            dto.Url, productId);
 
-        var price = Money.Create(request.Price.Value, request.Price.Currency);
-        var competitor = Competitor.Create(request.Name, price, request.Url, request.ImageUrl);
+        var price = Money.Create(dto.Price.Value, dto.Price.Currency);
+        var competitor = Competitor.Create(dto.Name, price, dto.Url, dto.ImageUrl);
 
         // Agregar el competidor al producto
         var addedCompetitor = await _productRepository.AddCompetitorAsync(productId, competitor);
@@ -296,7 +309,7 @@ public class ProductService : IProductService
         var competitorDto = _mapper.Map<CompetitorDTO>(addedCompetitor);
 
         _logger.LogInformation("Competitor with URL {CompetitorUrl} added successfully to product {ProductId}",
-            request.Url, productId);
+            dto.Url, productId);
 
         return competitorDto;
 
@@ -321,12 +334,12 @@ public class ProductService : IProductService
         _logger.LogInformation("Getting competitors for product {ProductId}", productId);
 
         var competitors = await _productRepository.GetCompetitorsAsync(productId);
-        var competitorDtos = _mapper.Map<List<CompetitorDTO>>(competitors);
+        var competitorDTOs = _mapper.Map<List<CompetitorDTO>>(competitors);
 
         _logger.LogInformation("Retrieved {Count} competitors for product {ProductId}",
-            competitorDtos.Count, productId);
+            competitorDTOs.Count, productId);
 
-        return competitorDtos;
+        return competitorDTOs;
 
     }
 }

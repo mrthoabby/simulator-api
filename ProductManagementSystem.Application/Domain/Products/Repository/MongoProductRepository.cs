@@ -120,10 +120,8 @@ public class MongoProductRepository : IProductRepository
                 }
             }
 
-            // Contar total de documentos
             var totalCount = await _productsCollection.CountDocumentsAsync(filterDefinition);
 
-            // Obtener productos paginados
             var skip = (paginationConfigs.Page - 1) * paginationConfigs.PageSize;
             var products = await _productsCollection
                 .Find(filterDefinition)
@@ -132,19 +130,7 @@ public class MongoProductRepository : IProductRepository
                 .Limit(paginationConfigs.PageSize)
                 .ToListAsync();
 
-            var totalPages = paginationConfigs.PageSize == 0 ? 1 : (int)Math.Ceiling((double)totalCount / paginationConfigs.PageSize);
-            var pageSize = paginationConfigs.PageSize == 0 ? totalCount : paginationConfigs.PageSize;
-
-            var result = new PaginatedResult<Product>
-            {
-                Items = products,
-                TotalCount = (int)totalCount,
-                Page = paginationConfigs.Page,
-                PageSize = pageSize,
-                TotalPages = totalPages,
-                HasNextPage = paginationConfigs.Page < totalPages,
-                HasPreviousPage = paginationConfigs.Page > 1
-            };
+            var result = PaginatedResult<Product>.Create(products, (int)totalCount, paginationConfigs.Page, paginationConfigs.PageSize);
 
             _logger.LogInformation("Retrieved {Count} products out of {TotalCount} total",
                 products.Count, totalCount);
@@ -169,7 +155,7 @@ public class MongoProductRepository : IProductRepository
                 .Set(p => p.Name, product.Name)
                 .Set(p => p.Price, product.Price)
                 .Set(p => p.ImageUrl, product.ImageUrl)
-                .Set(p => p.Deductions, product.Deductions)
+                .Set(p => p.Concepts, product.Concepts)
                 .Set(p => p.Providers, product.Providers)
                 .Set(p => p.Competitors, product.Competitors)
                 .Set(p => p.UpdatedAt, product.UpdatedAt);
@@ -304,73 +290,73 @@ public class MongoProductRepository : IProductRepository
         }
     }
 
-    // Deduction operations
-    public async Task<Deduction> AddDeductionAsync(string productId, Deduction deduction)
+    // Concept operations
+    public async Task<Concept> AddConceptAsync(string productId, Concept concept)
     {
         try
         {
-            _logger.LogInformation("Adding deduction {ConceptCode} to product {ProductId}",
-                deduction.ConceptCode, productId);
+            _logger.LogInformation("Adding concept {ConceptCode} to product {ProductId}",
+                concept.ConceptCode, productId);
 
             var filter = Builders<Product>.Filter.Eq(p => p.Id, productId);
-            var update = Builders<Product>.Update.Push(p => p.Deductions, deduction);
+            var update = Builders<Product>.Update.Push(p => p.Concepts, concept);
 
             var result = await _productsCollection.UpdateOneAsync(filter, update);
 
             if (result.ModifiedCount == 0)
             {
-                _logger.LogWarning("No product was updated when adding deduction. Product ID: {ProductId}", productId);
+                _logger.LogWarning("No product was updated when adding concept. Product ID: {ProductId}", productId);
                 throw new NotFoundException($"Product with ID {productId} not found");
             }
 
-            _logger.LogInformation("Deduction {ConceptCode} added successfully to product {ProductId}",
-                deduction.ConceptCode, productId);
-            return deduction;
+            _logger.LogInformation("Concept {ConceptCode} added successfully to product {ProductId}",
+                concept.ConceptCode, productId);
+            return concept;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error adding deduction {ConceptCode} to product {ProductId}",
-                deduction.ConceptCode, productId);
+            _logger.LogError(ex, "Error adding concept {ConceptCode} to product {ProductId}",
+                concept.ConceptCode, productId);
             throw;
         }
     }
 
-    public async Task RemoveDeductionAsync(string productId, string conceptCode)
+    public async Task RemoveConceptAsync(string productId, string conceptCode)
     {
         try
         {
-            _logger.LogInformation("Removing deduction {ConceptCode} from product {ProductId}",
+            _logger.LogInformation("Removing concept {ConceptCode} from product {ProductId}",
                 conceptCode, productId);
 
             var filter = Builders<Product>.Filter.Eq(p => p.Id, productId);
-            var update = Builders<Product>.Update.PullFilter(p => p.Deductions,
+            var update = Builders<Product>.Update.PullFilter(p => p.Concepts,
                 d => d.ConceptCode == conceptCode);
 
             var result = await _productsCollection.UpdateOneAsync(filter, update);
 
             if (result.ModifiedCount == 0)
             {
-                _logger.LogWarning("No deduction was removed. Product ID: {ProductId}, Concept Code: {ConceptCode}",
+                _logger.LogWarning("No concept was removed. Product ID: {ProductId}, Concept Code: {ConceptCode}",
                     productId, conceptCode);
-                throw new NotFoundException($"Deduction {conceptCode} not found in product {productId}");
+                throw new NotFoundException($"Concept {conceptCode} not found in product {productId}");
             }
 
-            _logger.LogInformation("Deduction {ConceptCode} removed successfully from product {ProductId}",
+            _logger.LogInformation("Concept {ConceptCode} removed successfully from product {ProductId}",
                 conceptCode, productId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error removing deduction {ConceptCode} from product {ProductId}",
+            _logger.LogError(ex, "Error removing concept {ConceptCode} from product {ProductId}",
                 conceptCode, productId);
             throw;
         }
     }
 
-    public async Task<List<Deduction>> GetDeductionsAsync(string productId)
+    public async Task<List<Concept>> GetConceptsAsync(string productId)
     {
         try
         {
-            _logger.LogInformation("Getting deductions for product {ProductId}", productId);
+            _logger.LogInformation("Getting concepts for product {ProductId}", productId);
 
             var filter = Builders<Product>.Filter.Eq(p => p.Id, productId);
             var product = await _productsCollection.Find(filter).FirstOrDefaultAsync();
@@ -381,13 +367,13 @@ public class MongoProductRepository : IProductRepository
                 throw new NotFoundException($"Product with ID {productId} not found");
             }
 
-            _logger.LogInformation("Retrieved {Count} deductions for product {ProductId}",
-                product.Deductions?.Count ?? 0, productId);
-            return product.Deductions ?? new List<Deduction>();
+            _logger.LogInformation("Retrieved {Count} concepts for product {ProductId}",
+product.Concepts?.Count ?? 0, productId);
+            return product.Concepts ?? new List<Concept>();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting deductions for product {ProductId}", productId);
+            _logger.LogError(ex, "Error getting concepts for product {ProductId}", productId);
             throw;
         }
     }

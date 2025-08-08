@@ -43,9 +43,9 @@ public class ProductMappingProfile : Profile
             .ConstructUsing(src => Competitor.Create(src.Name, Money.Create(src.Price.Value, src.Price.Currency), src.Url, src.ImageUrl));
 
         // Deduction mappings
-        CreateMap<Deduction, DeductionDTO>();
-        CreateMap<AddDeductionDTO, Deduction>()
-            .ConvertUsing(src => CreateDeduction(src));
+        CreateMap<Concept, ConceptDTO>();
+        CreateMap<AddConceptDTO, Concept>()
+            .ConvertUsing(src => CreateConcept(src));
     }
 
 
@@ -67,28 +67,27 @@ public class ProductMappingProfile : Profile
             : Offer.Create(money, src.MinQuantity);
     }
 
-    private static Deduction CreateDeduction(AddDeductionDTO src)
+    private static Concept CreateConcept(AddConceptDTO src)
     {
-        var application = Enum.Parse<EnumDeductionApplication>(src.Application);
 
-        if (src.Type == EnumDeductionType.Percentage.ToString())
+        if (src.Type == EnumConceptType.Percentage)
         {
             if (src.Percentage.HasValue)
             {
-                return Deduction.Create(src.ConceptCode, src.Name, application, src.Percentage.Value, src.Description);
+                return Concept.Create(src.ConceptCode, src.Name, src.Application, src.Percentage.Value, src.Description);
             }
-            return Deduction.Create(src.ConceptCode, src.Name, application, src.Description);
+            return Concept.Create(src.ConceptCode, src.Name, src.Application, src.Description);
         }
 
-        if (src.Type == EnumDeductionType.FixedValue.ToString())
+        if (src.Type == EnumConceptType.FixedValue)
         {
             if (src.Price != null)
             {
-                return Deduction.Create(src.ConceptCode, src.Name, application, Money.Create(src.Price.Value, src.Price.Currency), src.Description);
+                return Concept.Create(src.ConceptCode, src.Name, src.Application, Money.Create(src.Price.Value, src.Price.Currency), src.Description);
             }
-            return Deduction.Create(src.ConceptCode, src.Name, application, src.Description);
+            return Concept.Create(src.ConceptCode, src.Name, src.Application, src.Description);
         }
 
-        throw new FluentValidation.ValidationException($"Unknown deduction type: {src.Type}");
+        throw new FluentValidation.ValidationException($"Unknown concept type: {src.Type}");
     }
 }

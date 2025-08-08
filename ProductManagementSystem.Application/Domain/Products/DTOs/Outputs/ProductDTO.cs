@@ -17,8 +17,8 @@ public record ProductDTO
     [JsonPropertyName("image_url")]
     public string? ImageUrl { get; set; }
 
-    [JsonPropertyName("deductions")]
-    public List<DeductionDTO>? Deductions { get; set; }
+    [JsonPropertyName("concepts")]
+    public List<ConceptDTO>? Concepts { get; set; }
 
     [JsonPropertyName("providers")]
     public List<ProviderDTO>? Providers { get; set; }

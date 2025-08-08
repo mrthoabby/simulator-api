@@ -5,7 +5,7 @@ using ProductManagementSystem.Application.Domain.Shared.Enum;
 
 namespace ProductManagementSystem.Application.Domain.Products.DTOs.Outputs;
 
-public record DeductionDTO
+public record ConceptDTO
 {
     [JsonPropertyName("id")]
     public required string Id { get; set; }
@@ -23,10 +23,10 @@ public record DeductionDTO
     public decimal? Percentage { get; set; }
     [JsonPropertyName("type")]
     [Required(ErrorMessage = "Type is required")]
-    [EnumDataType(typeof(EnumDeductionType), ErrorMessage = "Invalid type")]
-    public required string Type { get; set; }
+    [EnumDataType(typeof(EnumConceptType), ErrorMessage = "Invalid type")]
+    public required EnumConceptType Type { get; set; }
     [JsonPropertyName("application")]
     [Required(ErrorMessage = "Application is required")]
-    [EnumDataType(typeof(EnumDeductionApplication), ErrorMessage = "Invalid application")]
-    public required string Application { get; set; }
+    [EnumDataType(typeof(EnumConceptApplication), ErrorMessage = "Invalid application")]
+    public required EnumConceptApplication Application { get; set; }
 }
