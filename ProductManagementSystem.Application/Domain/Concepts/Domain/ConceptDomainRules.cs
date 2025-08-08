@@ -6,33 +6,33 @@ namespace ProductManagementSystem.Application.Domain.Shared.Type;
 
 public class ConceptDomainRules : IConceptDomainRules
 {
-    private readonly IConceptCodeService _deductionCodeService;
+    private readonly IConceptCodeService _conceptCodeService;
 
-    public ConceptDomainRules(IConceptCodeService deductionCodeService)
+    public ConceptDomainRules(IConceptCodeService conceptCodeService)
     {
-        _deductionCodeService = deductionCodeService;
+        _conceptCodeService = conceptCodeService;
     }
 
-    private async Task<bool> hasValidConceptCode(List<Concept> deductions)
+    private async Task<bool> hasValidConceptCode(List<Concept> concepts)
     {
-        var deductionCodes = await _deductionCodeService.GetAllAsync();
-        foreach (var deduction in deductions)
+        var conceptCodes = await _conceptCodeService.GetAllAsync();
+        foreach (var concept in concepts)
         {
-            if (!deductionCodes.Any(dc => dc.Code == deduction.ConceptCode))
+            if (!conceptCodes.Any(cc => cc.Code.ToUpper() == concept.ConceptCode.ToUpper()))
             {
-                throw new NotFoundException($"Deduction with concept code {deduction.ConceptCode} has an invalid concept code");
+                throw new NotFoundException($"Concept with concept code {concept.ConceptCode} has an invalid concept code");
             }
         }
         return true;
     }
 
 
-    public async Task Validate(List<Concept> deductions)
+    public async Task Validate(List<Concept> concepts)
     {
-        await hasValidConceptCode(deductions);
+        await hasValidConceptCode(concepts);
     }
 
-    public Task Validate(Concept deduction)
+    public Task Validate(Concept concept)
     {
         throw new NotImplementedException();
     }
