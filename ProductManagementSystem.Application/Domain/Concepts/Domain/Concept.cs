@@ -90,6 +90,31 @@ public class Concept : Entity
 
         return deduction;
     }
+    public void SetName(string name)
+    {
+        Name = name;
+    }
+    public void SetDescription(string description)
+    {
+        Description = description;
+    }
+    public void SetApplication(EnumConceptApplication application)
+    {
+        Application = application;
+    }
+    public void SetType(EnumConceptType type)
+    {
+        Type = type;
+    }
+    public void SetPrice(Money price)
+    {
+        Price = price;
+    }
+    public void SetPercentage(decimal percentage)
+    {
+        Percentage = percentage;
+    }
+
 }
 
 public class DeductionValidator : AbstractValidator<Concept>
