@@ -50,7 +50,6 @@ public class ProductController : ControllerBase
     {
         _logger.LogInformation("Getting product by id: {Id}", id);
         var product = await _productService.GetByIdAsync(id);
-        if (product == null) throw new NotFoundException("Product not found");
         return Ok(product);
     }
 
