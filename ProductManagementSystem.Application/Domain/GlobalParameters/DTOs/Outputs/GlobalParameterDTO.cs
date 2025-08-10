@@ -5,13 +5,13 @@ using ProductManagementSystem.Application.Domain.Shared.Enum;
 
 namespace ProductManagementSystem.Application.Domain.GlobalParameters.DTOs.Outputs;
 
-public struct GlobalParameterDTO
+public record GlobalParameterDTO
 {
     [JsonPropertyName("concept_code")]
-    public string ConceptCode { get; init; }
+    public required string ConceptCode { get; init; }
 
     [JsonPropertyName("name")]
-    public string Name { get; init; }
+    public required string Name { get; init; }
 
     [JsonPropertyName("description")]
     public string? Description { get; init; }
