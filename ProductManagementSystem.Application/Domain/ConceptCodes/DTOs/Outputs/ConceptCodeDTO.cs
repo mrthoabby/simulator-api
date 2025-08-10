@@ -2,8 +2,8 @@ using System.Text.Json.Serialization;
 
 namespace ProductManagementSystem.Application.Domain.ConceptCodes.DTOs.Outputs;
 
-public struct ConceptCodeDTO
+public record ConceptCodeDTO
 {
     [JsonPropertyName("code")]
-    public string Code { get; init; }
+    public required string Code { get; init; }
 }
