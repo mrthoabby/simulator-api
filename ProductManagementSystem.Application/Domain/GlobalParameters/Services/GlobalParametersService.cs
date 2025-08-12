@@ -31,6 +31,16 @@ public class GlobalParametersService : IGlobalParametersService
         {
             throw new NotFoundException("Deduction code not found");
         }
+
+        if (request.Type == EnumConceptType.FixedValue && request.Price == null)
+        {
+            throw new ConflictException("Price is required when type is FixedValue");
+        }
+        if (request.Type == EnumConceptType.Percentage && request.Percentage == null)
+        {
+            throw new ConflictException("Percentage is required when type is Percentage");
+        }
+
         var price = request.Type == EnumConceptType.FixedValue && request.Price != null ? _mapper.Map<Money>(request.Price) : null;
         var percentage = request.Type == EnumConceptType.Percentage && request.Percentage != null ? request.Percentage.Value : 0;
 
@@ -38,7 +48,7 @@ public class GlobalParametersService : IGlobalParametersService
             request.ConceptCode,
             request.Name,
             request.Application,
-            price != null ? price.Value : percentage,
+            request.Type == EnumConceptType.FixedValue && request.Price != null ? request.Price.Value : percentage,
             request.Description);
 
 

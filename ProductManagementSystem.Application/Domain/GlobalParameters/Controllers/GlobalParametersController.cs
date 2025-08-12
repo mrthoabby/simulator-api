@@ -7,7 +7,7 @@ using ProductManagementSystem.Application.Domain.GlobalParameters.Services;
 namespace ProductManagementSystem.Application.Domain.GlobalParameters.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/global-parameters")]
 
 public class GlobalParametersController : ControllerBase
 {
