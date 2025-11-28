@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using ProductManagementSystem.Application.Domain.Auth.DTOs.Inputs;
-using ProductManagementSystem.Application.Domain.Auth.DTOs.Outputs;
-using ProductManagementSystem.Application.Domain.Auth.Services;
-using ProductManagementSystem.Application.Common.Domain.Errors;
+using ProductManagementSystem.Application.AppEntities.Auth.DTOs.Inputs;
+using ProductManagementSystem.Application.AppEntities.Auth.DTOs.Outputs;
+using ProductManagementSystem.Application.AppEntities.Auth.Services;
+using ProductManagementSystem.Application.Common.AppEntities.Errors;
 using System.Security.Claims;
 
-namespace ProductManagementSystem.Application.Domain.Auth.Controllers;
+namespace ProductManagementSystem.Application.AppEntities.Auth.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
