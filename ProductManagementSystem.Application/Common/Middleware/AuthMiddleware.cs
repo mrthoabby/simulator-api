@@ -1,4 +1,4 @@
-using ProductManagementSystem.Application.Domain.UserPlans.Repository;
+using ProductManagementSystem.Application.AppEntities.UserPlans.Repository;
 using System.Security.Claims;
 
 namespace ProductManagementSystem.Application.Common.Middleware;
@@ -54,15 +54,33 @@ public class AuthMiddleware
         else
         {
             additionalClaims.Add(new Claim(AuthMiddlewareValues.Claims.IsPlanActive, "true"));
-            additionalClaims.Add(new Claim(AuthMiddlewareValues.Claims.MaxProducts, allUserPlansActive.Max(p => p.Subscription.Restrictions.MaxProducts).ToString()));
-            additionalClaims.Add(new Claim(AuthMiddlewareValues.Claims.MaxUsers, allUserPlansActive.Max(p => p.Subscription.Restrictions.MaxUsers).ToString()));
-            additionalClaims.Add(new Claim(AuthMiddlewareValues.Claims.MaxCompetitors, allUserPlansActive.Max(p => p.Subscription.Restrictions.MaxCompetitors).ToString()));
-            additionalClaims.Add(new Claim(AuthMiddlewareValues.Claims.MaxCustomDeductions, allUserPlansActive.Max(p => p.Subscription.Restrictions.MaxCustomDeductions).ToString()));
-            additionalClaims.Add(new Claim(AuthMiddlewareValues.Claims.MaxSimulations, allUserPlansActive.Max(p => p.Subscription.Restrictions.MaxSimulations).ToString()));
-            additionalClaims.Add(new Claim(AuthMiddlewareValues.Claims.MaxActiveSessionDevices, allUserPlansActive.Max(p => p.Subscription.Restrictions.MaxActiveSessionDevices).ToString()));
-            additionalClaims.Add(new Claim(AuthMiddlewareValues.Claims.IsPDFExportSupported, allUserPlansActive.Max(p => p.Subscription.Restrictions.IsPDFExportSupported).ToString()));
-            additionalClaims.Add(new Claim(AuthMiddlewareValues.Claims.IsSimulationComparisonSupported, allUserPlansActive.Max(p => p.Subscription.Restrictions.IsSimulationComparisonSupported).ToString()));
-            additionalClaims.Add(new Claim(AuthMiddlewareValues.Claims.IsExcelExportSupported, allUserPlansActive.Max(p => p.Subscription.Restrictions.IsExcelExportSupported).ToString()));
+
+            string maxProducts = allUserPlansActive.Max(p => p.Subscription.Restrictions.MaxProducts).ToString();
+            additionalClaims.Add(new Claim(AuthMiddlewareValues.Claims.MaxProducts, maxProducts));
+
+            string maxUsers = allUserPlansActive.Max(p => p.Subscription.Restrictions.MaxUsers).ToString();
+            additionalClaims.Add(new Claim(AuthMiddlewareValues.Claims.MaxUsers, maxUsers));
+
+            string maxCompetitors = allUserPlansActive.Max(p => p.Subscription.Restrictions.MaxCompetitors).ToString();
+            additionalClaims.Add(new Claim(AuthMiddlewareValues.Claims.MaxCompetitors, maxCompetitors));
+
+            string maxCustomDeductions = allUserPlansActive.Max(p => p.Subscription.Restrictions.MaxCustomDeductions).ToString();
+            additionalClaims.Add(new Claim(AuthMiddlewareValues.Claims.MaxCustomDeductions, maxCustomDeductions));
+
+            string maxSimulations = allUserPlansActive.Max(p => p.Subscription.Restrictions.MaxSimulations).ToString();
+            additionalClaims.Add(new Claim(AuthMiddlewareValues.Claims.MaxSimulations, maxSimulations));
+
+            string maxActiveSessionDevices = allUserPlansActive.Max(p => p.Subscription.Restrictions.MaxActiveSessionDevices).ToString();
+            additionalClaims.Add(new Claim(AuthMiddlewareValues.Claims.MaxActiveSessionDevices, maxActiveSessionDevices));
+
+            string isPDFExportSupported = allUserPlansActive.Any(p => p.Subscription.Restrictions.IsPDFExportSupported).ToString();
+            additionalClaims.Add(new Claim(AuthMiddlewareValues.Claims.IsPDFExportSupported, isPDFExportSupported));
+
+            string isSimulationComparisonSupported = allUserPlansActive.Any(p => p.Subscription.Restrictions.IsSimulationComparisonSupported).ToString();
+            additionalClaims.Add(new Claim(AuthMiddlewareValues.Claims.IsSimulationComparisonSupported, isSimulationComparisonSupported));
+
+            string isExcelExportSupported = allUserPlansActive.Any(p => p.Subscription.Restrictions.IsExcelExportSupported).ToString();
+            additionalClaims.Add(new Claim(AuthMiddlewareValues.Claims.IsExcelExportSupported, isExcelExportSupported));
         }
 
         var claimsIdentity = new ClaimsIdentity(additionalClaims, "AuthMiddleware");

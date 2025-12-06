@@ -1,9 +1,8 @@
 using MongoDB.Bson.Serialization;
-using ProductManagementSystem.Application.Domain.Users.Models;
-using ProductManagementSystem.Application.Domain.Subscriptions.Models;
-using ProductManagementSystem.Application.Domain.Products.Models;
-using ProductManagementSystem.Application.Domain.UserPlans.Domain;
-using ProductManagementSystem.Application.Domain.UserPlans.Models;
+using ProductManagementSystem.Application.AppEntities.Users.Models;
+using ProductManagementSystem.Application.AppEntities.Subscriptions.Models;
+using ProductManagementSystem.Application.AppEntities.Products.Models;
+using ProductManagementSystem.Application.AppEntities.UserPlans.Domain;
 
 namespace ProductManagementSystem.Application.Infrastructure.MongoDB;
 

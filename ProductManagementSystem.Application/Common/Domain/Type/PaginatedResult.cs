@@ -1,4 +1,4 @@
-namespace ProductManagementSystem.Application.Common.Domain.Type;
+namespace ProductManagementSystem.Application.Common.AppEntities.Type;
 
 public class PaginatedResult<T>
 {

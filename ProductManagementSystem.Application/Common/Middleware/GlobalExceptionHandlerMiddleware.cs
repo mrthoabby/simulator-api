@@ -1,6 +1,6 @@
 using System.Net;
 using System.Text.Json;
-using ProductManagementSystem.Application.Common.Domain.Errors;
+using ProductManagementSystem.Application.Common.AppEntities.Errors;
 using ProductManagementSystem.Application.Common.Errors;
 using FluentValidation;
 

@@ -1,7 +1,7 @@
-using ProductManagementSystem.Application.Domain.Auth.DTOs.Outputs;
+using ProductManagementSystem.Application.AppEntities.Auth.DTOs.Outputs;
 using ProductManagementSystem.Application.Common.Errors;
 
-namespace ProductManagementSystem.Application.Common.Domain.Errors;
+namespace ProductManagementSystem.Application.Common.AppEntities.Errors;
 
 public class DeviceLimitExceededException : ConflictException
 {

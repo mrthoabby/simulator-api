@@ -3,9 +3,8 @@ namespace ProductManagementSystem.Application.Common.Helpers;
 public static class ValidationHelper
 {
     /// <summary>
-    /// 🚀 Ejecuta validaciones en paralelo - Simple y directo
+    /// Executes validations in parallel
     /// </summary>
-    /// <param name="validations">Funciones de validación que se ejecutan en paralelo</param>
     public static async Task TryRunAllParallel(params Func<Task>[] validations)
     {
         if (validations == null || validations.Length == 0)
@@ -16,11 +15,8 @@ public static class ValidationHelper
     }
 
     /// <summary>
-    /// 🎯 Ejecuta validaciones en paralelo y retorna el primer resultado
+    /// Executes validations in parallel and returns the first result
     /// </summary>
-    /// <typeparam name="T">Tipo del resultado esperado</typeparam>
-    /// <param name="validationWithResult">Función que retorna un resultado</param>
-    /// <param name="otherValidations">Otras validaciones que solo verifican</param>
     public static async Task<T> TryRunAllParallelWithResult<T>(
         Func<Task<T>> validationWithResult,
         params Func<Task>[] otherValidations)
@@ -37,10 +33,8 @@ public static class ValidationHelper
     }
 
     /// <summary>
-    /// 📦 Ejecuta validaciones en paralelo y retorna múltiples resultados
+    /// Executes validations in parallel and returns multiple results
     /// </summary>
-    /// <typeparam name="T">Tipo de los resultados</typeparam>
-    /// <param name="validationsWithResults">Funciones que retornan resultados</param>
     public static async Task<T[]> TryRunAllParallelWithResults<T>(params Func<Task<T>>[] validationsWithResults)
     {
         if (validationsWithResults == null || validationsWithResults.Length == 0)

@@ -1,4 +1,4 @@
-namespace ProductManagementSystem.Application.Common.Domain.Errors;
+namespace ProductManagementSystem.Application.Common.AppEntities.Errors;
 
 public class ApplicationError : Exception
 {
