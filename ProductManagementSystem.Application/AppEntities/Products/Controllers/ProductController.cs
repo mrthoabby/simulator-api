@@ -11,7 +11,6 @@ namespace ProductManagementSystem.Application.AppEntities.Products.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-// [Authenticate]
 public class ProductController(IProductService productService, ILogger<ProductController> logger) : ControllerBase
 {
     private readonly IProductService _productService = productService;
@@ -36,14 +35,14 @@ public class ProductController(IProductService productService, ILogger<ProductCo
     [ProducesResponseType(typeof(ProductDTO), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<ProductDTO>> GetById(string id)
     {
         _logger.LogInformation("Getting product by id: {Id}", id);
         var product = await _productService.GetByIdAsync(id);
+        if (product == null)
+        {
+            throw new NotFoundException("Product not found");
+        }
         return Ok(product);
     }
 

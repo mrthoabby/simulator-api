@@ -127,14 +127,12 @@ public class ProductService : IProductService
 
         _logger.LogInformation("Updating product with ID: {ProductId}", id);
 
-        // Obtener el producto existente
         var existingProduct = await _productRepository.GetByIdAsync(id);
         if (existingProduct == null)
         {
             throw new NotFoundException($"Product with ID {id} not found");
         }
 
-        // Actualizar propiedades
         var productBuilder = Product.Create(existingProduct.Name, existingProduct.Price);
         if (!string.IsNullOrEmpty(dto.Name))
             productBuilder.WithName(dto.Name);
@@ -164,19 +162,16 @@ public class ProductService : IProductService
 
         _logger.LogInformation("Updating image for product with ID: {ProductId}", id);
 
-        // Obtener el producto existente
         var existingProduct = await _productRepository.GetByIdAsync(id);
         if (existingProduct == null)
         {
             throw new NotFoundException($"Product with ID {id} not found");
         }
 
-        // Actualizar solo la imagen
         var productBuilder = Product.Create(existingProduct.Name, existingProduct.Price);
         if (!string.IsNullOrEmpty(dto.ImageUrl))
             productBuilder.WithImageUrl(dto.ImageUrl);
 
-        // Validar y actualizar
         var validatedProduct = productBuilder.Build();
         var updatedProduct = await _productRepository.UpdateAsync(id, validatedProduct);
 
@@ -253,8 +248,6 @@ public class ProductService : IProductService
             dto.Name, productId);
 
         var provider = Provider.Create(dto.Name, dto.Url, new List<Offer>());
-
-        // Agregar el proveedor al producto
         var addedProvider = await _productRepository.AddProviderAsync(productId, provider);
 
         var providerDto = _mapper.Map<ProviderDTO>(addedProvider);
@@ -303,8 +296,6 @@ public class ProductService : IProductService
 
         var price = Money.Create(dto.Price.Value, dto.Price.Currency);
         var competitor = Competitor.Create(dto.Name, price, dto.Url, dto.ImageUrl);
-
-        // Agregar el competidor al producto
         var addedCompetitor = await _productRepository.AddCompetitorAsync(productId, competitor);
 
         var competitorDto = _mapper.Map<CompetitorDTO>(addedCompetitor);
