@@ -5,6 +5,7 @@
 # Build outputs
 bin/
 obj/
+.vscode
 
 # Visual Studio
 .vs/
