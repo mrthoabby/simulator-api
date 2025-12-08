@@ -239,7 +239,15 @@ public class ProductService : IProductService
         _logger.LogInformation("Adding provider {ProviderName} to product {ProductId}",
             dto.Name, productId);
 
-        var provider = Provider.Create(dto.Name, dto.Url, new List<Offer>());
+        var offers = dto.Offers?.Select(o =>
+        {
+            var money = Money.Create(o.Price.Value, o.Price.Currency);
+            return string.IsNullOrEmpty(o.Url)
+                ? Offer.Create(money, o.MinQuantity)
+                : Offer.Create(o.Url, money, o.MinQuantity);
+        }).ToList() ?? new List<Offer>();
+
+        var provider = Provider.Create(dto.Name, dto.Url, offers);
         var addedProvider = await _productRepository.AddProviderAsync(productId, provider);
 
         var providerDto = _mapper.Map<ProviderDTO>(addedProvider);

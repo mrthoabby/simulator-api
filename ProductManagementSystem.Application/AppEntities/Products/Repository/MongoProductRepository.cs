@@ -190,8 +190,17 @@ public class MongoProductRepository : IProductRepository
                 provider.Name, productId);
 
             var filter = Builders<Product>.Filter.Eq(p => p.Id, productId);
-            var update = Builders<Product>.Update.Push(p => p.Providers, provider);
 
+            // First, ensure Providers is an array (not null)
+            var initializeFilter = Builders<Product>.Filter.And(
+                Builders<Product>.Filter.Eq(p => p.Id, productId),
+                Builders<Product>.Filter.Eq(p => p.Providers, null)
+            );
+            var initializeUpdate = Builders<Product>.Update.Set(p => p.Providers, new List<Provider>());
+            await _productsCollection.UpdateOneAsync(initializeFilter, initializeUpdate);
+
+            // Then push the new provider
+            var update = Builders<Product>.Update.Push(p => p.Providers, provider);
             var result = await _productsCollection.UpdateOneAsync(filter, update);
 
             if (result.ModifiedCount == 0)

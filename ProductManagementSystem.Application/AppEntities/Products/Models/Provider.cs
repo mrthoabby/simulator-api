@@ -6,11 +6,11 @@ public class Provider
 {
     public string Id { get; private set; }
     public string Name { get; set; }
-    public string Url { get; set; }
+    public string? Url { get; set; }
     public List<Offer> Offers { get; set; }
 
 
-    private Provider(string name, string url, List<Offer> offers)
+    private Provider(string name, string? url, List<Offer> offers)
     {
         Id = Guid.NewGuid().ToString();
         Name = name;
@@ -18,7 +18,7 @@ public class Provider
         Offers = offers;
     }
 
-    public static Provider Create(string name, string url, List<Offer> offers)
+    public static Provider Create(string name, string? url, List<Offer> offers)
     {
         var provider = new Provider(name, url, offers);
         var validator = new ProviderValidator();
@@ -50,8 +50,8 @@ public class ProviderValidator : AbstractValidator<Provider>
             .MaximumLength(100).WithMessage("Provider name cannot exceed 100 characters");
 
         RuleFor(x => x.Url)
-            .NotEmpty().WithMessage("Provider URL is required")
-            .Must(BeAValidUrl).WithMessage("Provider URL must be a valid URL");
+            .Must(BeAValidUrl).WithMessage("Provider URL must be a valid URL")
+            .When(x => !string.IsNullOrEmpty(x.Url));
 
         RuleFor(x => x.Offers)
             .NotEmpty().WithMessage("Provider must have at least one offer");

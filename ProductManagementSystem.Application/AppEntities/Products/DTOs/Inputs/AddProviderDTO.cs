@@ -10,10 +10,9 @@ public class AddProviderDTO
     [JsonPropertyName("name")]
     public string Name { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Provider URL is required")]
     [Url(ErrorMessage = "Provider URL must be a valid URL")]
     [JsonPropertyName("url")]
-    public string Url { get; set; } = string.Empty;
+    public string? Url { get; set; }
 
     [JsonPropertyName("offers")]
     public List<CreateOfferDTO>? Offers { get; set; }
