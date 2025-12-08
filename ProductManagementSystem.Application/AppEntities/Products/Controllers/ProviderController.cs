@@ -11,7 +11,7 @@ namespace ProductManagementSystem.Application.AppEntities.Products.Controllers;
 
 [ApiController]
 [Route("api/products/{productId}/providers")]
-[Authorize]
+// [Authorize]
 public class ProviderController : ControllerBase
 {
     private readonly IProductService _productService;
