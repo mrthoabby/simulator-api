@@ -29,6 +29,9 @@ using System.Text;
 using ProductManagementSystem.Application.AppEntities.ConceptCodes.Services;
 using ProductManagementSystem.Application.AppEntities.ConceptCodes.Repository;
 using ProductManagementSystem.Application.AppEntities.ConceptCodes.Mappings;
+using ProductManagementSystem.Application.AppEntities.Quotations.Services;
+using ProductManagementSystem.Application.AppEntities.Quotations.Repository;
+using ProductManagementSystem.Application.AppEntities.Quotations.Mappings;
 using ProductManagementSystem.Application.AppEntities.Shared.Type;
 using ProductManagementSystem.Application.AppEntities.Concepts.Domain;
 using ProductManagementSystem.Application.Common.AppEntities.Errors;
@@ -238,7 +241,7 @@ if (jwtSettings != null)
 }
 
 // Configure AutoMapper
-builder.Services.AddAutoMapper(typeof(ProductMappingProfile), typeof(UserMappingProfile), typeof(SubscriptionMappingProfile), typeof(AuthMappingProfile), typeof(GlobalParametersMappingProfile), typeof(ConceptCodeMappingProfile));
+builder.Services.AddAutoMapper(typeof(ProductMappingProfile), typeof(UserMappingProfile), typeof(SubscriptionMappingProfile), typeof(AuthMappingProfile), typeof(GlobalParametersMappingProfile), typeof(ConceptCodeMappingProfile), typeof(QuotationMappingProfile));
 
 builder.Services.AddHostedService<PaymentJob>();
 
@@ -269,6 +272,10 @@ builder.Services.AddScoped<IGlobalParametersRepository, GlobalParametersReposito
 // Register ConceptCodes Services
 builder.Services.AddScoped<IConceptCodeService, ConceptCodeService>();
 builder.Services.AddScoped<IConceptCodeRepository, ConceptCodeRepository>();
+
+// Register Quotation Services
+builder.Services.AddScoped<IQuotationService, QuotationService>();
+builder.Services.AddScoped<IQuotationRepository, MongoQuotationRepository>();
 
 // Register ConceptDomainRules
 builder.Services.AddScoped<IConceptDomainRules, ConceptDomainRules>();
