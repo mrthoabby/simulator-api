@@ -1,14 +1,12 @@
 using FluentValidation;
 using ProductManagementSystem.Application.AppEntities.Shared.Type;
 
-
 namespace ProductManagementSystem.Application.AppEntities.Products.Models;
 
 public class Product
 {
     public string Id { get; private set; }
     public string Name { get; private set; }
-    public Money Price { get; private set; }
     public string? ImageUrl { get; private set; }
     public List<Concept>? Concepts { get; private set; }
     public List<Provider>? Providers { get; private set; }
@@ -16,11 +14,10 @@ public class Product
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
-    private Product(string name, Money price)
+    private Product(string name)
     {
         Id = Guid.NewGuid().ToString();
         Name = name;
-        Price = price;
         CreatedAt = DateTime.UtcNow;
         UpdatedAt = CreatedAt;
     }
@@ -28,27 +25,19 @@ public class Product
     public class ProductBuilder
     {
         private string _name;
-        private Money _price;
         private string? _imageUrl;
         private List<Concept>? _concepts;
         private List<Provider>? _providers;
         private List<Competitor>? _competitors;
 
-        public ProductBuilder(string name, Money price)
+        public ProductBuilder(string name)
         {
             _name = name;
-            _price = price;
         }
 
         public ProductBuilder WithName(string name)
         {
             _name = name;
-            return this;
-        }
-
-        public ProductBuilder WithPrice(Money price)
-        {
-            _price = price;
             return this;
         }
 
@@ -78,9 +67,9 @@ public class Product
 
         public Product Build()
         {
-            var product = new Product(_name, _price);
+            var product = new Product(_name);
             var validator = new ProductValidator();
-            var validationResult = validator.Validate(new Product(_name, _price));
+            var validationResult = validator.Validate(new Product(_name));
             if (!validationResult.IsValid)
             {
                 var errors = validationResult.Errors.Select(e => e.ErrorMessage);
@@ -96,11 +85,12 @@ public class Product
         }
     }
 
-    public static ProductBuilder Create(string name, Money price)
+    public static ProductBuilder Create(string name)
     {
-        return new ProductBuilder(name, price);
+        return new ProductBuilder(name);
     }
 }
+
 public class ProductValidator : AbstractValidator<Product>
 {
     public ProductValidator()
@@ -109,14 +99,9 @@ public class ProductValidator : AbstractValidator<Product>
             .NotEmpty().WithMessage("Product name is required")
             .MaximumLength(200).WithMessage("Product name cannot exceed 200 characters");
 
-        RuleFor(x => x.Price)
-            .NotEmpty().WithMessage("Price is required");
-
-
         RuleFor(x => x.ImageUrl)
             .Must(BeAValidUrl).When(x => !string.IsNullOrEmpty(x.ImageUrl))
             .WithMessage("Image URL must be a valid URL");
-
     }
 
     private bool BeAValidUrl(string? url)

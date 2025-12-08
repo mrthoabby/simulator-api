@@ -45,8 +45,7 @@ public class ProductServiceTests
     {
         var createDto = new CreateProductDTO
         {
-            Name = "Test Product",
-            Price = new MoneyDTO { Value = 99.99m, Currency = EnumCurrency.USD }
+            Name = "Test Product"
         };
 
         var product = CreateTestProduct();
@@ -70,7 +69,6 @@ public class ProductServiceTests
         var createDto = new CreateProductDTO
         {
             Name = "Test Product",
-            Price = new MoneyDTO { Value = 99.99m, Currency = EnumCurrency.USD },
             ImageUrl = "https://example.com/image.jpg"
         };
 
@@ -194,8 +192,7 @@ public class ProductServiceTests
         var productId = "test-id";
         var updateDto = new UpdateProductDTO
         {
-            Name = "Updated Product",
-            Price = new MoneyDTO { Value = 149.99m, Currency = EnumCurrency.USD }
+            Name = "Updated Product"
         };
         var existingProduct = CreateTestProduct();
         var updatedProduct = CreateTestProduct();
@@ -405,8 +402,7 @@ public class ProductServiceTests
 
     private static Product CreateTestProduct()
     {
-        var price = Money.Create(99.99m, EnumCurrency.USD);
-        return Product.Create("Test Product", price).Build();
+        return Product.Create("Test Product").Build();
     }
 
     private static ProductDTO CreateTestProductDTO()
@@ -415,7 +411,6 @@ public class ProductServiceTests
         {
             Id = "test-id",
             Name = "Test Product",
-            Price = new MoneyDTO { Value = 99.99m, Currency = EnumCurrency.USD },
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

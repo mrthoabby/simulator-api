@@ -26,8 +26,6 @@ public class MongoProductRepository : IProductRepository
         var indexModels = new[]
         {
             new CreateIndexModel<Product>(Builders<Product>.IndexKeys.Ascending(p => p.Name)),
-            new CreateIndexModel<Product>(Builders<Product>.IndexKeys.Ascending(p => p.Price.Value)),
-            new CreateIndexModel<Product>(Builders<Product>.IndexKeys.Ascending(p => p.Price.Currency)),
             new CreateIndexModel<Product>(Builders<Product>.IndexKeys.Ascending(p => p.ImageUrl)),
             new CreateIndexModel<Product>(Builders<Product>.IndexKeys.Descending(p => p.CreatedAt)),
             new CreateIndexModel<Product>(Builders<Product>.IndexKeys.Ascending(p => p.UpdatedAt))
@@ -89,24 +87,6 @@ public class MongoProductRepository : IProductRepository
                     filterDefinition = filterBuilder.Or(nameFilter, imageUrlFilter);
                 }
 
-                if (filter.MinPrice.HasValue)
-                {
-                    var minPriceFilter = filterBuilder.Gte(p => p.Price.Value, filter.MinPrice.Value);
-                    filterDefinition = filterBuilder.And(filterDefinition, minPriceFilter);
-                }
-
-                if (filter.MaxPrice.HasValue)
-                {
-                    var maxPriceFilter = filterBuilder.Lte(p => p.Price.Value, filter.MaxPrice.Value);
-                    filterDefinition = filterBuilder.And(filterDefinition, maxPriceFilter);
-                }
-
-                if (filter.Currency.HasValue)
-                {
-                    var currencyFilter = filterBuilder.Eq(p => p.Price.Currency, filter.Currency.Value);
-                    filterDefinition = filterBuilder.And(filterDefinition, currencyFilter);
-                }
-
                 if (filter.CreatedAt.HasValue)
                 {
                     var createdAtFilter = filterBuilder.Gte(p => p.CreatedAt, filter.CreatedAt.Value);
@@ -153,7 +133,6 @@ public class MongoProductRepository : IProductRepository
             var filter = Builders<Product>.Filter.Eq(p => p.Id, id);
             var update = Builders<Product>.Update
                 .Set(p => p.Name, product.Name)
-                .Set(p => p.Price, product.Price)
                 .Set(p => p.ImageUrl, product.ImageUrl)
                 .Set(p => p.Concepts, product.Concepts)
                 .Set(p => p.Providers, product.Providers)

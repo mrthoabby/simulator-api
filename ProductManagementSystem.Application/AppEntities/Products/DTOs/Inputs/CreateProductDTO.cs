@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using ProductManagementSystem.Application.AppEntities.Shared.DTOs;
 
 namespace ProductManagementSystem.Application.AppEntities.Products.DTOs.Inputs;
 
@@ -10,10 +9,6 @@ public record CreateProductDTO
     [StringLength(200, ErrorMessage = "Product name cannot exceed 200 characters")]
     [JsonPropertyName("name")]
     public required string Name { get; init; }
-
-    [Required(ErrorMessage = "Price is required")]
-    [JsonPropertyName("price")]
-    public required MoneyDTO Price { get; init; }
 
     [Url(ErrorMessage = "Image URL must be a valid URL")]
     [JsonPropertyName("image_url")]

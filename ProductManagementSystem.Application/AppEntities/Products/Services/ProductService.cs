@@ -4,11 +4,10 @@ using ProductManagementSystem.Application.Common.AppEntities.Type;
 using ProductManagementSystem.Application.AppEntities.Products.Repository;
 using ProductManagementSystem.Application.AppEntities.Products.Models;
 using ProductManagementSystem.Application.AppEntities.Shared.Type;
-using ProductManagementSystem.Application.AppEntities.Shared.Enum;
-using AutoMapper;
-using ProductManagementSystem.Application.Common.Errors;
 using ProductManagementSystem.Application.AppEntities.Shared.DTOs;
 using ProductManagementSystem.Application.AppEntities.Concepts.Domain;
+using AutoMapper;
+using ProductManagementSystem.Application.Common.Errors;
 
 
 namespace ProductManagementSystem.Application.AppEntities.Products.Services;
@@ -33,8 +32,7 @@ public class ProductService : IProductService
     public async Task<ProductDTO> CreateAsync(CreateProductDTO dto)
     {
         _logger.LogInformation("Creating product: {Name}", dto.Name);
-        var price = Money.Create(dto.Price.Value, dto.Price.Currency);
-        var productBuilder = Product.Create(dto.Name, price);
+        var productBuilder = Product.Create(dto.Name);
         if (!string.IsNullOrEmpty(dto.ImageUrl))
             productBuilder.WithImageUrl(dto.ImageUrl);
 
@@ -133,15 +131,9 @@ public class ProductService : IProductService
             throw new NotFoundException($"Product with ID {id} not found");
         }
 
-        var productBuilder = Product.Create(existingProduct.Name, existingProduct.Price);
+        var productBuilder = Product.Create(existingProduct.Name);
         if (!string.IsNullOrEmpty(dto.Name))
             productBuilder.WithName(dto.Name);
-
-        if (dto.Price != null)
-        {
-            var currency = Enum.Parse<EnumCurrency>(dto.Price.Currency.ToString());
-            productBuilder.WithPrice(Money.Create(dto.Price.Value, currency));
-        }
 
         if (!string.IsNullOrEmpty(dto.ImageUrl))
             productBuilder.WithImageUrl(dto.ImageUrl);
@@ -168,7 +160,7 @@ public class ProductService : IProductService
             throw new NotFoundException($"Product with ID {id} not found");
         }
 
-        var productBuilder = Product.Create(existingProduct.Name, existingProduct.Price);
+        var productBuilder = Product.Create(existingProduct.Name);
         if (!string.IsNullOrEmpty(dto.ImageUrl))
             productBuilder.WithImageUrl(dto.ImageUrl);
 

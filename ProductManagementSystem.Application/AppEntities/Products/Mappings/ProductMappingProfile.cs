@@ -21,9 +21,9 @@ public class ProductMappingProfile : Profile
         // Product mappings
         CreateMap<Product, ProductDTO>();
         CreateMap<ProductDTO, Product>()
-            .ConstructUsing(dto => Product.Create(dto.Name, Money.Create(dto.Price.Value, dto.Price.Currency)).Build());
+            .ConstructUsing(dto => Product.Create(dto.Name).Build());
         CreateMap<CreateProductDTO, Product>()
-            .ConstructUsing(dto => Product.Create(dto.Name, Money.Create(dto.Price.Value, dto.Price.Currency))
+            .ConstructUsing(dto => Product.Create(dto.Name)
                 .WithImageUrl(dto.ImageUrl)
                 .Build());
 

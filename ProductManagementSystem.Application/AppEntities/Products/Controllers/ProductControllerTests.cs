@@ -10,7 +10,6 @@ using ProductManagementSystem.Application.AppEntities.Products.DTOs.Outputs;
 using ProductManagementSystem.Application.Common.AppEntities.Type;
 using ProductManagementSystem.Application.Common.Errors;
 using ProductManagementSystem.Application.AppEntities.Shared.DTOs;
-using ProductManagementSystem.Application.AppEntities.Shared.Enum;
 
 namespace ProductManagementSystem.Application.AppEntities.Products.Controllers;
 
@@ -131,7 +130,7 @@ public class ProductControllerTests
     {
         // Arrange
         var paginationConfigs = new PaginationConfigDTO { Page = 1, PageSize = 10 };
-        var filter = new FilterProductDTO { MinPrice = 100, MaxPrice = 1000, Currency = EnumCurrency.USD };
+        var filter = new FilterProductDTO { CreatedAt = DateTime.UtcNow.AddDays(-30) };
         var paginatedResult = new PaginatedResult<ProductDTO>
         {
             Items = new List<ProductDTO> { CreateValidProductDTO() },
@@ -240,8 +239,7 @@ public class ProductControllerTests
     {
         return new CreateProductDTO
         {
-            Name = "Test Product",
-            Price = new MoneyDTO { Value = 99.99m, Currency = EnumCurrency.USD }
+            Name = "Test Product"
         };
     }
 
@@ -249,8 +247,7 @@ public class ProductControllerTests
     {
         return new UpdateProductDTO
         {
-            Name = "Updated Test Product",
-            Price = new MoneyDTO { Value = 149.99m, Currency = EnumCurrency.USD }
+            Name = "Updated Test Product"
         };
     }
 
@@ -268,7 +265,6 @@ public class ProductControllerTests
         {
             Id = "123e4567-e89b-12d3-a456-426614174000",
             Name = "Test Product",
-            Price = new MoneyDTO { Value = 99.99m, Currency = EnumCurrency.USD },
             ImageUrl = "https://example.com/image.jpg",
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
