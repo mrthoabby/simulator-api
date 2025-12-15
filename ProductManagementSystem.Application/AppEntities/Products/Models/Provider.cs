@@ -57,8 +57,15 @@ public class ProviderValidator : AbstractValidator<Provider>
             .NotEmpty().WithMessage("Provider must have at least one offer");
     }
 
-    private bool BeAValidUrl(string url)
+    private bool BeAValidUrl(string? url)
     {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            // La condición .When(x => !string.IsNullOrEmpty(x.Url)) ya evita null/vacío,
+            // pero devolvemos true por seguridad en caso de que cambie esa regla.
+            return true;
+        }
+
         return Uri.TryCreate(url, UriKind.Absolute, out _);
     }
 }
