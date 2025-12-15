@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using ProductManagementSystem.Application.AppEntities.ConceptCodes.Services;
 using ProductManagementSystem.Application.AppEntities.ConceptCodes.DTOs.Inputs;
 using ProductManagementSystem.Application.AppEntities.ConceptCodes.DTOs.Outputs;
@@ -9,7 +10,7 @@ namespace ProductManagementSystem.Application.AppEntities.ConceptCodes.Controlle
 
 [ApiController]
 [Route("api/concept-codes")]
-// [Authenticate]
+[Authorize]
 public class ConceptCodeController : ControllerBase
 {
     private readonly IConceptCodeService _conceptCodeService;

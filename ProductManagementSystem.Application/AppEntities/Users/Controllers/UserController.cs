@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using ProductManagementSystem.Application.AppEntities.Users.DTOs.Inputs;
 using ProductManagementSystem.Application.AppEntities.Users.DTOs.Outputs;
 using ProductManagementSystem.Application.AppEntities.Users.Services;
@@ -10,6 +11,7 @@ namespace ProductManagementSystem.Application.AppEntities.Users.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
@@ -22,6 +24,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(UserDTO), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
@@ -33,6 +36,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("activate")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(UserDTO), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]

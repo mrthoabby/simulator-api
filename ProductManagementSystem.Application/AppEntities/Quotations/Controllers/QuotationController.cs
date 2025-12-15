@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using ProductManagementSystem.Application.AppEntities.Quotations.DTOs.Inputs;
 using ProductManagementSystem.Application.AppEntities.Quotations.DTOs.Outputs;
 using ProductManagementSystem.Application.AppEntities.Quotations.Services;
@@ -11,6 +12,7 @@ namespace ProductManagementSystem.Application.AppEntities.Quotations.Controllers
 
 [ApiController]
 [Route("api/products/{productId}/quotations")]
+[Authorize]
 public class QuotationController : ControllerBase
 {
     private readonly IQuotationService _quotationService;
@@ -35,7 +37,7 @@ public class QuotationController : ControllerBase
         if (request.ProductId != productId)
         {
             return BadRequest(ErrorResponse.Create(
-                "BadRequest", 
+                "BadRequest",
                 "Product ID in route does not match Product ID in request body",
                 $"Route productId: {productId}, Request productId: {request.ProductId}"
             ));
@@ -73,8 +75,8 @@ public class QuotationController : ControllerBase
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<PaginatedResult<QuotationDTO>>> GetByProductId(
-        string productId, 
-        [FromQuery] PaginationConfigDTO paginationConfig, 
+        string productId,
+        [FromQuery] PaginationConfigDTO paginationConfig,
         [FromQuery] FilterQuotationDTO? filter)
     {
         _logger.LogInformation("Getting quotations for product {ProductId}", productId);

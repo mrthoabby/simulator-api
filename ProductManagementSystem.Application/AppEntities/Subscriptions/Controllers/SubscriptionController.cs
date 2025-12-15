@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using ProductManagementSystem.Application.AppEntities.Subscriptions.Services;
 using ProductManagementSystem.Application.AppEntities.Subscriptions.DTOs.Inputs;
 using ProductManagementSystem.Application.AppEntities.Subscriptions.DTOs.Outputs;
@@ -9,6 +10,7 @@ namespace ProductManagementSystem.Application.AppEntities.Subscriptions.Controll
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class SubscriptionController : ControllerBase
 {
     private readonly ISubscriptionService _subscriptionService;

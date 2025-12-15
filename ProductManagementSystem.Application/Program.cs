@@ -41,7 +41,7 @@ var builder = WebApplication.CreateBuilder(args);
 if (!builder.Environment.IsDevelopment())
 {
     builder.Configuration.AddEnvironmentVariables();
-    
+
     var mongoConnectionString = Environment.GetEnvironmentVariable("MONGODB_CONNECTION_STRING");
     var mongoDatabaseName = Environment.GetEnvironmentVariable("MONGODB_DATABASE_NAME");
     var jwtSecretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY");
@@ -304,6 +304,8 @@ app.UseHttpsRedirection();
 app.UseRequestTimeouts();
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseAuthentication();
+app.UseAuthorization();
+app.UseMiddleware<AuthMiddleware>();
 
 app.MapControllers();
 

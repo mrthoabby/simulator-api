@@ -12,29 +12,34 @@ public class MongoUserPlanRepository : IUserPlanRepository
         _collection = database.GetCollection<UserPlan>("UserPlans");
     }
 
-    public Task<List<UserPlan>> GetAllWhereExistsAsync(string email)
+    public async Task<List<UserPlan>> GetAllWhereExistsAsync(string email)
     {
-        return Task.FromResult(new List<UserPlan>());
+        var filter = Builders<UserPlan>.Filter.Eq(x => x.OwnerEmail, email);
+        return await _collection.Find(filter).ToListAsync();
     }
 
-    public Task<List<UserPlan>> GetAllWhereIsMemberAsync(string email)
+    public async Task<List<UserPlan>> GetAllWhereIsMemberAsync(string email)
     {
-        return Task.FromResult(new List<UserPlan>());
+        var filter = Builders<UserPlan>.Filter.Eq(x => x.OwnerEmail, email);
+        return await _collection.Find(filter).ToListAsync();
     }
 
-    public Task<List<UserPlan>> GetAllWhereIsOwnerAsync(string email)
+    public async Task<List<UserPlan>> GetAllWhereIsOwnerAsync(string email)
     {
-        return Task.FromResult(new List<UserPlan>());
+        var filter = Builders<UserPlan>.Filter.Eq(x => x.OwnerEmail, email);
+        return await _collection.Find(filter).ToListAsync();
     }
 
-    public Task<UserPlan> CreateAsync(UserPlan userPlan)
+    public async Task<UserPlan> CreateAsync(UserPlan userPlan)
     {
-        return Task.FromResult(userPlan);
+        await _collection.InsertOneAsync(userPlan);
+        return userPlan;
     }
 
-    public Task DeleteAsync(string id)
+    public async Task DeleteAsync(string id)
     {
-        return Task.CompletedTask;
+        var filter = Builders<UserPlan>.Filter.Eq(x => x.Id, id);
+        await _collection.DeleteOneAsync(filter);
     }
 }
 

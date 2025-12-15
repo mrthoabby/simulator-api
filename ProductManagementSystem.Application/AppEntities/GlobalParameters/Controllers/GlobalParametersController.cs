@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using ProductManagementSystem.Application.Common.AppEntities.Errors;
 using ProductManagementSystem.Application.AppEntities.GlobalParameters.DTOs.Inputs;
 using ProductManagementSystem.Application.AppEntities.GlobalParameters.DTOs.Outputs;
@@ -8,7 +9,7 @@ namespace ProductManagementSystem.Application.AppEntities.GlobalParameters.Contr
 
 [ApiController]
 [Route("api/global-parameters")]
-
+[Authorize]
 public class GlobalParametersController : ControllerBase
 {
     private readonly IGlobalParametersService _service;

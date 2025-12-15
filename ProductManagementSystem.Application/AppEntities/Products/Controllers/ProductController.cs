@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using ProductManagementSystem.Application.AppEntities.Products.Services;
 using ProductManagementSystem.Application.AppEntities.Products.DTOs.Inputs;
 using ProductManagementSystem.Application.AppEntities.Products.DTOs.Outputs;
@@ -11,6 +12,7 @@ namespace ProductManagementSystem.Application.AppEntities.Products.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class ProductController(IProductService productService, ILogger<ProductController> logger) : ControllerBase
 {
     private readonly IProductService _productService = productService;
