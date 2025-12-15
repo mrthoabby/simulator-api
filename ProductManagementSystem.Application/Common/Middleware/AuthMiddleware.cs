@@ -8,16 +8,13 @@ public class AuthMiddleware
     private readonly RequestDelegate _next;
     private readonly ILogger<AuthMiddleware> _logger;
 
-    private readonly IUserPlanRepository _userPlanRepository;
-
-    public AuthMiddleware(RequestDelegate next, ILogger<AuthMiddleware> logger, IUserPlanRepository userPlanRepository)
+    public AuthMiddleware(RequestDelegate next, ILogger<AuthMiddleware> logger)
     {
         _next = next;
         _logger = logger;
-        _userPlanRepository = userPlanRepository;
     }
 
-    public async Task InvokeAsync(HttpContext context)
+    public async Task InvokeAsync(HttpContext context, IUserPlanRepository userPlanRepository)
     {
         var path = context.Request.Path.Value?.ToLower();
 
@@ -29,20 +26,20 @@ public class AuthMiddleware
 
         if (!context.User.Identity?.IsAuthenticated ?? true)
         {
-            _logger.LogWarning("Acceso no autorizado a {Path} desde {IP}",
+            _logger.LogWarning("Unauthorized access to {Path} from {IP}",
                 path, context.Connection.RemoteIpAddress);
 
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             await context.Response.WriteAsJsonAsync(new
             {
                 error = "Unauthorized",
-                message = "Se requiere autenticación para acceder a este recurso"
+                message = "Authentication is required to access this resource"
             });
             return;
         }
 
         var userEmail = context.User.FindFirst(ClaimTypes.Email)?.Value;
-        var userPlans = await _userPlanRepository.GetAllWhereExistsAsync(userEmail!);
+        var userPlans = await userPlanRepository.GetAllWhereExistsAsync(userEmail!);
 
         var additionalClaims = new List<Claim>();
 
@@ -88,7 +85,7 @@ public class AuthMiddleware
 
         var userName = context.User.FindFirst(ClaimTypes.Name)?.Value;
 
-        _logger.LogInformation("Acceso autorizado a {Path} por usuario {UserEmail} ({UserName}) desde {IP}",
+        _logger.LogInformation("Authorized access to {Path} by user {UserEmail} ({UserName}) from {IP}",
             path, userEmail, userName, context.Connection.RemoteIpAddress);
 
         await _next(context);
