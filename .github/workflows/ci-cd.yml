@@ -96,12 +96,10 @@ jobs:
         with:
           images: ${{ vars.DOCKER_REGISTRY_URL != '' && format('{0}/{1}', vars.DOCKER_REGISTRY_URL, env.DOCKER_IMAGE_NAME) || env.DOCKER_IMAGE_NAME }}
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=sha-
+            type=raw,value=latest
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
