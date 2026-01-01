@@ -312,22 +312,22 @@ jobs:
               -e SECURITY_PASSWORD_PEPPER='$SECURITY_PASSWORD_PEPPER' \
               -v /var/log/\$CONTAINER_NAME:/app/logs \
               --health-cmd='curl -f http://localhost:'\$APP_PORT'/health || exit 1' \
-              --health-interval=30s \
-              --health-timeout=10s \
-              --health-start-period=40s \
+              --health-interval=5s \
+              --health-timeout=3s \
+              --health-start-period=10s \
               --health-retries=3 \
               \$FULL_IMAGE_NAME
             
             echo '⏳ Waiting for container to be healthy...'
-            timeout=60
+            timeout=15
             elapsed=0
             while [ \$elapsed -lt \$timeout ]; do
               if docker inspect --format='{{.State.Health.Status}}' \$CONTAINER_NAME | grep -q 'healthy'; then
                 echo '✅ Container is healthy!'
                 break
               fi
-              sleep 5
-              elapsed=\$((elapsed + 5))
+              sleep 2
+              elapsed=\$((elapsed + 2))
               echo '   Waiting... ('\$elapsed'/'\$timeout' seconds)'
             done
             
@@ -347,6 +347,6 @@ jobs:
           SERVER_PORT: ${{ secrets.SERVER_PORT || '22' }}
           APP_PORT: ${{ secrets.APP_PORT }}
         run: |
-          sleep 10
+          sleep 3
           ssh -p ${{ secrets.SERVER_PORT || '22' }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
             "docker ps | grep ${{ env.DOCKER_CONTAINER_NAME }} && echo '✅ Container is running on port $APP_PORT' || echo '❌ Container is not running'"

@@ -47,7 +47,7 @@ USER appuser
 
 ENV DOTNET_RUNNING_IN_CONTAINER=true
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+HEALTHCHECK --interval=5s --timeout=3s --start-period=10s --retries=3 \
     CMD sh -c 'curl -f http://localhost:${ASPNETCORE_HTTP_PORTS}/health || exit 1'
 
 ENTRYPOINT ["dotnet", "ProductManagementSystem.Application.dll"]
