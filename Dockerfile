@@ -15,7 +15,9 @@ COPY ProductManagementSystem.sln .
 COPY ProductManagementSystem.Application/ProductManagementSystem.Application.csproj ProductManagementSystem.Application/
 
 # Restore dependencies (this layer will be cached if project files don't change)
-RUN dotnet restore --verbosity quiet
+# Using BuildKit cache mount for NuGet packages
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \
+    dotnet restore --verbosity quiet
 
 # Copy all source code
 COPY . .
@@ -38,7 +40,9 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
 
 # Install curl for health checks (lightweight alternative to wget)
-RUN apt-get update && \
+# Using --mount=type=cache for better layer caching
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    apt-get update && \
     apt-get install -y --no-install-recommends curl && \
     rm -rf /var/lib/apt/lists/*
 

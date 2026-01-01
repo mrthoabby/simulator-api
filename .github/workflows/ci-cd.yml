@@ -36,12 +36,32 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.nuget/packages
+            **/packages.lock.json
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Cache .NET build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            **/bin
+            **/obj
+          key: ${{ runner.os }}-dotnet-${{ hashFiles('**/*.csproj') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-dotnet-${{ hashFiles('**/*.csproj') }}-
+
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore --verbosity minimal --nologo
         working-directory: ${{ github.workspace }}
 
       - name: Build solution
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build --configuration Release --no-restore --verbosity minimal --nologo
         working-directory: ${{ github.workspace }}
 
       - name: Run tests
@@ -49,7 +69,8 @@ jobs:
           dotnet test \
             --configuration Release \
             --no-build \
-            --verbosity normal \
+            --verbosity minimal \
+            --nologo \
             --collect:"XPlat Code Coverage" \
             --results-directory:"${{ github.workspace }}/TestResults" \
             --settings:"${{ github.workspace }}/coverlet.runsettings" \
@@ -81,6 +102,10 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            image=moby/buildkit:latest
+            network=host
 
       - name: Log in to Docker Registry
         if: ${{ vars.DOCKER_REGISTRY_URL != '' }}
@@ -113,6 +138,7 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             BUILD_CONFIGURATION=Release
+          platforms: linux/amd64
 
       - name: Save Docker image as artifact
         if: ${{ vars.DOCKER_REGISTRY_URL == '' }}
