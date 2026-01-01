@@ -1,0 +1,104 @@
+# =============================================================================
+# Docker Ignore File
+# Excludes files and directories from Docker build context
+# =============================================================================
+
+# Git
+.git
+.gitignore
+.gitattributes
+.github/
+
+# IDE and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build outputs
+**/bin/
+**/obj/
+**/out/
+*.dll
+*.exe
+*.pdb
+*.cache
+
+# Test results
+**/TestResults/
+**/coverage/
+*.trx
+coverage.xml
+coverage.cobertura.xml
+*.coverage
+*.coveragexml
+
+# Logs
+**/logs/
+*.log
+*.log.*
+
+# Local settings (sensitive)
+appsettings.local.json
+appsettings.*.local.json
+*.secrets.json
+
+# Documentation
+*.md
+docs/
+README.md
+CHANGELOG.md
+LICENSE
+
+# Docker files (not needed in context)
+docker-compose*.yml
+.dockerignore
+Dockerfile*
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+azure-pipelines.yml
+Jenkinsfile
+
+# Node modules (if any)
+node_modules/
+package-lock.json
+yarn.lock
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# NuGet packages (will be restored during build)
+*.nupkg
+packages/
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
