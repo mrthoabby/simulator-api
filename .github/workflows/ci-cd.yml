@@ -126,12 +126,28 @@ jobs:
             type=sha,prefix=sha-
             type=raw,value=latest
 
-      - name: Build and push Docker image
+      - name: Build Docker image (without registry)
+        if: ${{ vars.DOCKER_REGISTRY_URL == '' }}
         uses: docker/build-push-action@v5
         with:
           context: ${{ github.workspace }}
           file: ${{ github.workspace }}/Dockerfile
-          push: ${{ vars.DOCKER_REGISTRY_URL != '' }}
+          push: false
+          tags: ${{ env.DOCKER_IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_CONFIGURATION=Release
+          platforms: linux/amd64
+          outputs: type=docker,dest=/tmp/docker-image.tar
+
+      - name: Build and push Docker image (with registry)
+        if: ${{ vars.DOCKER_REGISTRY_URL != '' }}
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ github.workspace }}
+          file: ${{ github.workspace }}/Dockerfile
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
@@ -140,11 +156,18 @@ jobs:
             BUILD_CONFIGURATION=Release
           platforms: linux/amd64
 
-      - name: Save Docker image as artifact
+      - name: Compress Docker image
         if: ${{ vars.DOCKER_REGISTRY_URL == '' }}
         run: |
-          docker save ${{ env.DOCKER_IMAGE_NAME }}:latest | gzip > docker-image.tar.gz
-        continue-on-error: true
+          echo "Compressing Docker image..."
+          if [ -f /tmp/docker-image.tar ]; then
+            gzip -c /tmp/docker-image.tar > docker-image.tar.gz
+            ls -lh docker-image.tar.gz
+            echo "✅ Image compressed successfully"
+          else
+            echo "❌ Docker image tar file not found at /tmp/docker-image.tar"
+            exit 1
+          fi
 
       - name: Upload Docker image artifact
         if: ${{ vars.DOCKER_REGISTRY_URL == '' }}
@@ -186,9 +209,22 @@ jobs:
       - name: Transfer Docker image to server
         if: ${{ vars.DOCKER_REGISTRY_URL == '' }}
         run: |
+          echo "Verifying image file before transfer..."
+          if [ ! -f docker-image.tar.gz ]; then
+            echo "❌ Error: docker-image.tar.gz not found"
+            exit 1
+          fi
+          file_size=$(stat -f%z docker-image.tar.gz 2>/dev/null || stat -c%s docker-image.tar.gz 2>/dev/null || echo "unknown")
+          echo "Image file size: $file_size bytes"
+          if [ "$file_size" = "0" ] || [ "$file_size" = "unknown" ]; then
+            echo "❌ Error: Image file is empty or invalid"
+            exit 1
+          fi
+          echo "Transferring image to server..."
           scp -P ${{ secrets.SERVER_PORT || '22' }} -o StrictHostKeyChecking=no \
             docker-image.tar.gz \
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/docker-image.tar.gz
+          echo "✅ Image transferred successfully"
 
       - name: Deploy to server
         env:
@@ -228,11 +264,26 @@ jobs:
             else
               echo '📥 Loading image from transferred file...'
               if [ -f /tmp/docker-image.tar.gz ]; then
-                gunzip -c /tmp/docker-image.tar.gz | docker load
-                rm -f /tmp/docker-image.tar.gz
-                echo '✅ Image loaded successfully'
+                file_size=\$(stat -f%z /tmp/docker-image.tar.gz 2>/dev/null || stat -c%s /tmp/docker-image.tar.gz 2>/dev/null || echo '0')
+                echo \"   File size: \$file_size bytes\"
+                if [ \"\$file_size\" -eq 0 ]; then
+                  echo '❌ Error: Image file is empty'
+                  exit 1
+                fi
+                echo '   Decompressing and loading image...'
+                if gunzip -c /tmp/docker-image.tar.gz | docker load; then
+                  rm -f /tmp/docker-image.tar.gz
+                  echo '✅ Image loaded successfully'
+                  docker images | grep \"\$IMAGE_NAME\" || echo '⚠️  Warning: Image not found in docker images list'
+                else
+                  echo '❌ Error: Failed to load Docker image'
+                  echo '   Verifying file integrity...'
+                  file /tmp/docker-image.tar.gz
+                  exit 1
+                fi
               else
-                echo '⚠️  No image file found at /tmp/docker-image.tar.gz'
+                echo '❌ Error: No image file found at /tmp/docker-image.tar.gz'
+                exit 1
               fi
             fi
             
