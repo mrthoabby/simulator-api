@@ -22,9 +22,18 @@ RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \
 # Copy all source code
 COPY . .
 
+# Restore again after copying all files to ensure all dependencies are resolved
+# This handles cases where additional files (like Directory.Build.props, etc.) affect restore
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \
+    dotnet restore --verbosity quiet
+
 # Build and publish with optimizations
 WORKDIR /src/ProductManagementSystem.Application
-RUN dotnet publish \
+# Restore from project directory to ensure all dependencies are available
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \
+    dotnet restore --verbosity quiet
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages \
+    dotnet publish \
     -c ${BUILD_CONFIGURATION} \
     -o /app/publish \
     --no-restore \
