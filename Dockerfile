@@ -59,11 +59,10 @@ USER appuser
 # ASPNETCORE_HTTP_PORTS will be set at runtime via APP_PORT secret
 ENV DOTNET_RUNNING_IN_CONTAINER=true
 
-# Health check - checks if the application is responding
+# Health check - checks if the application is responding via dedicated /health endpoint
 # Uses ASPNETCORE_HTTP_PORTS environment variable (set at runtime via APP_PORT secret)
-# Note: This checks the root endpoint. For better health checks, add a dedicated /health endpoint
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD sh -c 'curl -f http://localhost:${ASPNETCORE_HTTP_PORTS}/ || exit 1'
+    CMD sh -c 'curl -f http://localhost:${ASPNETCORE_HTTP_PORTS}/health || exit 1'
 
 # Entry point
 ENTRYPOINT ["dotnet", "ProductManagementSystem.Application.dll"]

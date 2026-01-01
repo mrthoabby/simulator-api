@@ -1,0 +1,293 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch: # Permite ejecución manual
+
+env:
+  DOTNET_VERSION: '9.0.x'
+  DOCKER_IMAGE_NAME: 'product-management-api'
+  DOCKER_CONTAINER_NAME: 'product-management-api-container'
+
+jobs:
+  # ============================================================================
+  # Job 1: Build and Test
+  # ============================================================================
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore
+        working-directory: ${{ github.workspace }}
+
+      - name: Build solution
+        run: dotnet build --configuration Release --no-restore
+        working-directory: ${{ github.workspace }}
+
+      - name: Run tests
+        run: |
+          dotnet test \
+            --configuration Release \
+            --no-build \
+            --verbosity normal \
+            --collect:"XPlat Code Coverage" \
+            --results-directory:"${{ github.workspace }}/TestResults" \
+            --settings:"${{ github.workspace }}/coverlet.runsettings" \
+            --logger:"trx;LogFileName=test-results.trx"
+        working-directory: ${{ github.workspace }}
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ${{ github.workspace }}/TestResults/**/*
+          retention-days: 30
+
+      - name: Publish test results
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: ${{ github.workspace }}/TestResults/**/*.trx
+
+  # ============================================================================
+  # Job 2: Build Docker Image
+  # ============================================================================
+  build-docker-image:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.event_name != 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Registry (if using registry)
+        if: ${{ vars.DOCKER_REGISTRY_URL != '' }}
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.DOCKER_REGISTRY_URL }}
+          username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
+          password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ vars.DOCKER_REGISTRY_URL != '' && format('{0}/{1}', vars.DOCKER_REGISTRY_URL, env.DOCKER_IMAGE_NAME) || env.DOCKER_IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ github.workspace }}
+          file: ${{ github.workspace }}/Dockerfile
+          push: ${{ vars.DOCKER_REGISTRY_URL != '' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_CONFIGURATION=Release
+
+      - name: Save Docker image as artifact (if not using registry)
+        if: ${{ vars.DOCKER_REGISTRY_URL == '' }}
+        run: |
+          docker save ${{ env.DOCKER_IMAGE_NAME }}:latest | gzip > docker-image.tar.gz
+        continue-on-error: true
+
+      - name: Upload Docker image artifact (if not using registry)
+        if: ${{ vars.DOCKER_REGISTRY_URL == '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image
+          path: docker-image.tar.gz
+          retention-days: 1
+
+  # ============================================================================
+  # Job 3: Deploy to Production
+  # ============================================================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build-docker-image
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    environment:
+      name: production
+      url: ${{ vars.PRODUCTION_URL }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Download Docker image artifact (if not using registry)
+        if: ${{ vars.DOCKER_REGISTRY_URL == '' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image
+          path: .
+
+      - name: Transfer Docker image to server (if not using registry)
+        if: ${{ vars.DOCKER_REGISTRY_URL == '' }}
+        run: |
+          scp -P ${{ secrets.SERVER_PORT || '22' }} -o StrictHostKeyChecking=no \
+            docker-image.tar.gz \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/docker-image.tar.gz
+
+      - name: Deploy to server
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT || '22' }}
+          DOCKER_IMAGE_NAME: ${{ env.DOCKER_IMAGE_NAME }}
+          DOCKER_CONTAINER_NAME: ${{ env.DOCKER_CONTAINER_NAME }}
+          APP_PORT: ${{ secrets.APP_PORT }}
+          REGISTRY_URL: ${{ vars.DOCKER_REGISTRY_URL }}
+          MONGODB_CONNECTION_STRING: ${{ secrets.MONGODB_CONNECTION_STRING }}
+          MONGODB_DATABASE_NAME: ${{ secrets.MONGODB_DATABASE_NAME }}
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+          JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
+          JWT_AUDIENCE: ${{ secrets.JWT_AUDIENCE }}
+          SECURITY_PASSWORD_PEPPER: ${{ secrets.SECURITY_PASSWORD_PEPPER }}
+        run: |
+          ssh -p $SERVER_PORT -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST "
+            set -e
+            
+            echo '🚀 Starting deployment process...'
+            
+            # Variables passed from GitHub Actions
+            IMAGE_NAME='$DOCKER_IMAGE_NAME'
+            CONTAINER_NAME='$DOCKER_CONTAINER_NAME'
+            APP_PORT='$APP_PORT'
+            REGISTRY_URL='$REGISTRY_URL'
+            
+            # Determine image tag
+            if [ -n \"\$REGISTRY_URL\" ]; then
+              FULL_IMAGE_NAME=\"\${REGISTRY_URL}/\${IMAGE_NAME}:latest\"
+            else
+              FULL_IMAGE_NAME=\"\${IMAGE_NAME}:latest\"
+            fi
+            
+            # Pull image if using registry, or load from transferred file
+            if [ -n \"\$REGISTRY_URL\" ]; then
+              echo '📥 Pulling latest image from registry...'
+              docker pull \"\$FULL_IMAGE_NAME\" || echo '⚠️  Image pull failed, will use existing image'
+            else
+              echo '📥 Loading image from transferred file...'
+              if [ -f /tmp/docker-image.tar.gz ]; then
+                gunzip -c /tmp/docker-image.tar.gz | docker load
+                rm -f /tmp/docker-image.tar.gz
+                echo '✅ Image loaded successfully'
+              else
+                echo '⚠️  No image file found at /tmp/docker-image.tar.gz'
+              fi
+            fi
+            
+            # Stop and remove existing container if it exists
+            if [ \"\$(docker ps -aq -f name=\$CONTAINER_NAME)\" ]; then
+              echo '🛑 Stopping existing container...'
+              docker stop \$CONTAINER_NAME || true
+              echo '🗑️  Removing existing container...'
+              docker rm \$CONTAINER_NAME || true
+            fi
+            
+            # Create logs directory on host if it doesn't exist
+            mkdir -p /var/log/\$CONTAINER_NAME
+            
+            # Run new container
+            echo '🚀 Starting new container...'
+            echo '   Using port '\$APP_PORT' for both internal and external mapping'
+            docker run -d \
+              --name \$CONTAINER_NAME \
+              --restart unless-stopped \
+              -p \$APP_PORT:\$APP_PORT \
+              -e ASPNETCORE_ENVIRONMENT=Production \
+              -e ASPNETCORE_HTTP_PORTS=\$APP_PORT \
+              -e MONGODB_CONNECTION_STRING='$MONGODB_CONNECTION_STRING' \
+              -e MONGODB_DATABASE_NAME='$MONGODB_DATABASE_NAME' \
+              -e JWT_SECRET_KEY='$JWT_SECRET_KEY' \
+              -e JWT_ISSUER='$JWT_ISSUER' \
+              -e JWT_AUDIENCE='$JWT_AUDIENCE' \
+              -e SECURITY_PASSWORD_PEPPER='$SECURITY_PASSWORD_PEPPER' \
+              -v /var/log/\$CONTAINER_NAME:/app/logs \
+              --health-cmd='curl -f http://localhost:'\$APP_PORT'/health || exit 1' \
+              --health-interval=30s \
+              --health-timeout=10s \
+              --health-start-period=40s \
+              --health-retries=3 \
+              \$FULL_IMAGE_NAME
+            
+            # Wait for container to be healthy
+            echo '⏳ Waiting for container to be healthy...'
+            timeout=60
+            elapsed=0
+            while [ \$elapsed -lt \$timeout ]; do
+              if docker inspect --format='{{.State.Health.Status}}' \$CONTAINER_NAME | grep -q 'healthy'; then
+                echo '✅ Container is healthy!'
+                break
+              fi
+              sleep 5
+              elapsed=\$((elapsed + 5))
+              echo '   Waiting... ('\$elapsed'/'\$timeout' seconds)'
+            done
+            
+            # Show container status
+            echo '📊 Container status:'
+            docker ps -a | grep \$CONTAINER_NAME
+            
+            # Show logs (last 20 lines)
+            echo '📋 Recent logs:'
+            docker logs --tail 20 \$CONTAINER_NAME
+            
+            echo '✅ Deployment completed successfully!'
+          "
+
+      - name: Verify deployment
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT || '22' }}
+          APP_PORT: ${{ secrets.APP_PORT }}
+        run: |
+          sleep 10
+          ssh -p ${{ secrets.SERVER_PORT || '22' }} -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "docker ps | grep ${{ env.DOCKER_CONTAINER_NAME }} && echo '✅ Container is running on port $APP_PORT' || echo '❌ Container is not running'"
+
