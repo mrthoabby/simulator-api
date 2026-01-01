@@ -128,6 +128,9 @@ builder.Services.AddControllers()
             GlobalExceptionHandlerMiddleware.HandleValidationErrors(context);
     });
 
+// Register health checks so infrastructure probes can hit `/health`.
+builder.Services.AddHealthChecks();
+
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -221,7 +224,33 @@ if (authSettings != null)
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
 if (jwtSettings != null)
 {
+    // Validate JWT configuration
+    if (string.IsNullOrEmpty(jwtSettings.SecretKey))
+    {
+        Log.Fatal("JWT SecretKey is not configured. Set JWT_SECRET_KEY environment variable.");
+        throw new ApplicationError("JWT SecretKey is required. Configure JWT_SECRET_KEY environment variable.");
+    }
+    
+    if (string.IsNullOrEmpty(jwtSettings.Issuer))
+    {
+        Log.Fatal("JWT Issuer is not configured. Set JWT_ISSUER environment variable.");
+        throw new ApplicationError("JWT Issuer is required. Configure JWT_ISSUER environment variable.");
+    }
+
     builder.Services.AddSingleton(jwtSettings);
+
+    // Parse multiple audiences from comma/semicolon separated string
+    var validAudiences = jwtSettings.GetAudiences().ToList();
+    
+    if (validAudiences.Count == 0)
+    {
+        Log.Fatal("JWT Audience is not configured. Set JWT_AUDIENCE environment variable.");
+        throw new ApplicationError("JWT Audience is required. Configure JWT_AUDIENCE environment variable (comma-separated list).");
+    }
+    
+    Log.Information("JWT configured with {AudienceCount} valid audience(s): {Audiences}", 
+        validAudiences.Count, 
+        string.Join(", ", validAudiences));
 
     builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
@@ -233,7 +262,8 @@ if (jwtSettings != null)
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
                 ValidIssuer = jwtSettings.Issuer,
-                ValidAudience = jwtSettings.Audience,
+                // Support multiple audiences (comma/semicolon separated in JWT_AUDIENCE secret)
+                ValidAudiences = validAudiences,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey))
             };
         });
@@ -306,6 +336,9 @@ app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<AuthMiddleware>();
+
+// Health check is deliberately mapped before controllers so infra probes are always allowed.
+app.MapHealthChecks("/health");
 
 app.MapControllers();
 

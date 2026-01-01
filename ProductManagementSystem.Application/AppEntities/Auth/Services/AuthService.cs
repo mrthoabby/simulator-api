@@ -79,9 +79,12 @@ public class AuthService : IAuthService
             throw new UnauthorizedException(AuthServiceValues.Errors.InvalidCredentials);
         }
 
+        // Validate and resolve audience (client_id)
+        var audience = ResolveAudience(loginDto.ClientId);
+
         await HandleSessionLimitsAsync(user, loginDto.DeviceIdToRevoke);
 
-        var accessToken = GenerateAccessToken(user);
+        var accessToken = GenerateAccessToken(user, audience);
         var refreshToken = GenerateRefreshToken();
 
         var accessTokenExpiry = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationInMinutes);
@@ -148,10 +151,13 @@ public class AuthService : IAuthService
             throw new UnauthorizedException(AuthServiceValues.Errors.InvalidRefreshToken);
         }
 
+        // Validate and resolve audience (client_id)
+        var audience = ResolveAudience(refreshTokenDto.ClientId);
+
         refreshAuthToken.Revoke("Token refreshed");
         await _tokenRepository.UpdateAsync(refreshAuthToken);
 
-        var newAccessToken = GenerateAccessToken(user);
+        var newAccessToken = GenerateAccessToken(user, audience);
         var newRefreshToken = GenerateRefreshToken();
 
         var accessTokenExpiry = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationInMinutes);
@@ -264,7 +270,42 @@ public class AuthService : IAuthService
         _logger.LogInformation("Expired tokens cleanup completed");
     }
 
-    private string GenerateAccessToken(User user)
+    /// <summary>
+    /// Resolves the audience for the token.
+    /// If clientId is provided, validates it against the list of valid audiences.
+    /// If not provided, uses the first audience from the configuration.
+    /// </summary>
+    private string ResolveAudience(string? clientId)
+    {
+        var validAudiences = _jwtSettings.GetAudiences().ToList();
+        
+        if (validAudiences.Count == 0)
+        {
+            throw new InvalidOperationException("No valid audiences configured. Check JWT_AUDIENCE configuration.");
+        }
+
+        // If no clientId provided, use the first audience (primary)
+        if (string.IsNullOrWhiteSpace(clientId))
+        {
+            return validAudiences.First();
+        }
+
+        // Validate that the requested clientId is in the list of valid audiences
+        var matchedAudience = validAudiences.FirstOrDefault(a => 
+            a.Equals(clientId, StringComparison.OrdinalIgnoreCase));
+
+        if (matchedAudience == null)
+        {
+            _logger.LogWarning("Invalid client_id provided: {ClientId}. Valid audiences: {ValidAudiences}", 
+                clientId, string.Join(", ", validAudiences));
+            throw new UnauthorizedException($"Invalid client_id: '{clientId}'. This client is not authorized.");
+        }
+
+        _logger.LogDebug("Resolved audience: {Audience} for client_id: {ClientId}", matchedAudience, clientId);
+        return matchedAudience;
+    }
+
+    private string GenerateAccessToken(User user, string audience)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.ASCII.GetBytes(_jwtSettings.SecretKey);
@@ -284,7 +325,7 @@ public class AuthService : IAuthService
             Subject = new ClaimsIdentity(claims),
             Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationInMinutes),
             Issuer = _jwtSettings.Issuer,
-            Audience = _jwtSettings.Audience,
+            Audience = audience,  // Use the resolved audience
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
         };
 

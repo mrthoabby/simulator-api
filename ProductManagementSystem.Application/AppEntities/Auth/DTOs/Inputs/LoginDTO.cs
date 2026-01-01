@@ -20,4 +20,13 @@ public class LoginDTO
     /// </summary>
     [JsonPropertyName("device_id_to_revoke")]
     public string? DeviceIdToRevoke { get; set; }
+
+    /// <summary>
+    /// Audience específico para el token JWT.
+    /// Debe coincidir con uno de los audiences configurados en JWT_AUDIENCE.
+    /// Si no se especifica, se usa el primer audience de la lista.
+    /// Ejemplos: "https://web.domain.com", "extension-key-123", "mobile-app"
+    /// </summary>
+    [JsonPropertyName("client_id")]
+    public string? ClientId { get; set; }
 }
